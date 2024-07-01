@@ -51,7 +51,7 @@ setup(
             "pytest>=6,<9",
             "black>=23.3,<24.5",
             "ruff==0.0.*",
-            "functions-framework>=3.4,<3.8",
+            "functions-framework>=3.8.0,<3.9",
         ]
     },
     setup_requires=[
