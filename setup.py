@@ -2,7 +2,7 @@
 # -*- encoding: utf-8 -*-
 """
 setup.py
-A module that installs the SKIDNAME skid as a module
+A module that installs the DEQ EID skid as a module
 """
 from pathlib import Path
 
@@ -10,18 +10,18 @@ from setuptools import find_packages, setup
 
 #: Load version from source file
 version = {}
-version_file = Path(__file__).parent / "src" / "skidname" / "version.py"
+version_file = Path(__file__).parent / "src" / "deq_eid" / "version.py"
 exec(version_file.read_text(), version)
 
 setup(
-    name="skidname",
+    name="deq_eid",
     version=version["__version__"],
     license="MIT",
     long_description=(Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",
     author="UGRC",
     author_email="ugrc-developers@utah.gov",
-    url="https://github.com/agrc/skid",
+    url="https://github.com/agrc/deq-eid-skid",
     packages=find_packages("src"),
     package_dir={"": "src"},
     include_package_data=True,
@@ -34,7 +34,7 @@ setup(
         "Topic :: Utilities",
     ],
     project_urls={
-        "Issue Tracker": "https://github.com/agrc/skid/issues",
+        "Issue Tracker": "https://github.com/agrc/deq-eid-skid/issues",
     },
     keywords=["gis"],
     install_requires=[
@@ -59,7 +59,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "skidname = skidname.main:function",
+            "deq_eid = deq_eid.main:function",
         ]
     },
 )

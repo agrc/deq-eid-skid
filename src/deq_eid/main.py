@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # * coding: utf8 *
 """
-Run the SKIDNAME script as a cloud function.
+Run the deq_eid script as a cloud function.
 """
 import json
 import logging
@@ -26,7 +26,7 @@ except ImportError:
 
 
 def _get_secrets():
-    """A helper method for loading secrets from either a GCF mount point or the local src/skidname/secrets/secrets.json file
+    """A helper method for loading secrets from either a GCF mount point or the local src/deq_eid/secrets/secrets.json file
 
     Raises:
         FileNotFoundError: If the secrets file can't be found.
