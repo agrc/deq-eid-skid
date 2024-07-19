@@ -18,8 +18,8 @@ The first step in creating a skid is to create a new repository in GitHub that u
 1. Clone the repo on your local computer
    - Use GitHub Desktop or any terminal with the git cli installed.
    - git cli commands:
-      - `cd c:\where\you\store\git\repos`
-      - `git clone https://github.com/agrc/projectname-skid`
+     - `cd c:\where\you\store\git\repos`
+     - `git clone https://github.com/agrc/projectname-skid`
 
 ## Initial Skid Development
 
@@ -28,12 +28,12 @@ You'll need to do a few steps to set up your environment to develop a skid. You 
 This all presumes you're working in Visual Studio Code.
 
 1. Create new environment for the project and install Python
-   - `conda create --name PROJECT_NAME python=3.8`
+   - `conda create --name PROJECT_NAME python=3.11`
    - `conda activate PROJECT_NAME`
 1. Open the repo folder in VS Code
-1. Rename `src/skidname` folder to your desired skid name
+1. Rename `src/deq_eid` folder to your desired skid name
 1. Edit the `setup.py:name, url, description, keywords, and entry_points` to reflect your new skid name
-1. Edit the `test_skidname.py` to match your skid name.
+1. Edit the `test_deq_eid.py` to match your skid name.
    - You will have one `test_filename.py` file for each program file in your `src` directory and you will write tests for the specific file in the `test_filename.py` file
 1. Install the skid in your conda environment as an editable package for development
    - This will install all the normal and development dependencies (palletjack, supervisor, etc)
@@ -51,9 +51,6 @@ This all presumes you're working in Visual Studio Code.
    - Add any captured statistics (number of rows updated, etc) to the `summary_rows` list near the end of `process()` to add them to the email message summary (the logfile is already included as an attachment)
 1. Run the tests in VS Code
    - Testing -> Run Tests
-1. When you're ready to do a Pull Request, update the version numbering in `version.py`
-   - Use [semantic versioning](https://semver.org/#summary)
-   - Your first release should be 1.0.0
 
 ## Running it as a Google Cloud Function
 
@@ -62,7 +59,7 @@ This all presumes you're working in Visual Studio Code.
 `functions-framework` allows you to run your code in a local framework that mirrors the Google Cloud Functions environment. This lets you make sure it's configured to run properly when called through the cloud process. If you keep the framework of this template, this should start running just fine.
 
 1. Navigate to the package folder within `src`:
-   - `cd c:\path\to\repo\src\skidname`
+   - `cd c:\path\to\repo\src\deq_eid`
 1. Start the local functions framework server. This will attempt to load the function and prepare it to be run, but doesn't actually call it.
    - `functions-framework --target=main --signature-type=event`
 1. Open a bash shell (`git-bash` if you installed git for Windows) and run the pubsub.sh script to call the function itself with an HTTP request via curl:
@@ -97,7 +94,7 @@ Skids use a GitHub action to deploy the function, pub/sub topic, and scheduler a
 - Project ID
 - Storage Bucket ID
 
-The cloud functions may need 512 MB or 1 GB of RAM to run successfully. The source dir should point to `src/skidname`. A cloud function just runs the specified function in the `main.py` file in the source dir; it doesn't pip install the function itself. It will pip install any dependencies listed in `setup.py`, however.
+The cloud functions may need 512 MB or 1 GB of RAM to run successfully. The source dir should point to `src/deq_eid`. A cloud function just runs the specified function in the `main.py` file in the source dir; it doesn't pip install the function itself. It will pip install any dependencies listed in `setup.py`, however.
 
 ### Handling Secrets and Configuration Files
 
