@@ -40,6 +40,7 @@ setup(
     install_requires=[
         "ugrc-palletjack>=2.2,<4.5",
         "agrc-supervisor>=3.0,<3.2",
+        "requests<2.32",
     ],
     extras_require={
         "tests": [
