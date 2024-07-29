@@ -1,56 +1,24 @@
-# UGRC Palletjack Skid Starter Tempalate
+# DEQ Environmental Incidents Salesforce Palletjack Skid
 
-[![Push Events](https://github.com/agrc/skid/actions/workflows/push.yml/badge.svg)](https://github.com/agrc/skid/actions/workflows/push.yml)
+[![Push Events](https://github.com/agrc/deq-eid-skid/actions/workflows/push.yml/badge.svg)](https://github.com/agrc/skid/actions/workflows/push.yml)
+[![Pull Events](https://github.com/agrc/deq-eid-skid/actions/workflows/pull_request.yml/badge.svg)](https://github.com/agrc/skid/actions/workflows/pull_request.yml)
 
-A template for building skids that use palletjack to update AGOL data from a tabular data source and that are run as Google Cloud Functions
+This skid pulls data from the DEQ EID Salesforce instance and loads it into DEQ AGOL hosted feature layers [for use in the interactive map](https://github.com/agrc/deq-enviro/issues/665).
 
-For an example of a working skid, see [erap-skid](https://github.com/agrc/erap-skid) or [uorg-skid](https://github.com/agrc/uorg-skid).
-
-## Creating a Git Repository
-
-The first step in creating a skid is to create a new repository in GitHub that uses this repo as a template. You'll then clone the repo to your computer and start developing.
-
-1. Create a new repo in <https://github.com/agrc>
-   - Under `Repository template`, choose `agrc/skid`
-   - Name it `projectname-skid` so that everyone knows it's a skid
-   - Make it a Public repo
-   - Leave everything else alone (the template will take care of it all).
-1. Clone the repo on your local computer
-   - Use GitHub Desktop or any terminal with the git cli installed.
-   - git cli commands:
-     - `cd c:\where\you\store\git\repos`
-     - `git clone https://github.com/agrc/projectname-skid`
-
-## Initial Skid Development
-
-You'll need to do a few steps to set up your environment to develop a skid. You may also want to make sure you've got the skid working locally before adding the complexity of the cloud function.
-
-This all presumes you're working in Visual Studio Code.
+## Development Setup
 
 1. Create new environment for the project and install Python
-   - `conda create --name PROJECT_NAME python=3.11`
-   - `conda activate PROJECT_NAME`
-1. Open the repo folder in VS Code
-1. Rename `src/deq_eid` folder to your desired skid name
-1. Edit the `setup.py:name, url, description, keywords, and entry_points` to reflect your new skid name
-1. Edit the `test_deq_eid.py` to match your skid name.
-   - You will have one `test_filename.py` file for each program file in your `src` directory and you will write tests for the specific file in the `test_filename.py` file
+   - `conda create --name deq-eid-skid python=3.11`
+   - `conda activate deq-eid-skid`
 1. Install the skid in your conda environment as an editable package for development
    - This will install all the normal and development dependencies (palletjack, supervisor, etc)
    - `cd c:\path\to\repo`
    - `pip install -e .[tests]`
-   - add any additional project requirements to the `setup.py:install_requires` list
 1. Set config variables and secrets
    - `secrets.json` holds passwords, secret keys, etc, and will not (and should not) be tracked in git
    - `config.py` holds all the other configuration variables that can be publicly exposed in git
    - Copy `secrets_template.json` to `secrets.json` and change/add whatever values are needed for your skid
    - Change/add variables in `config.py` as needed
-1. Write your skid-specific code inside `process()` in `main.py`
-   - If it makes your code cleaner, you can write other methods and call them within `process()`
-   - Any `print()` statements should instead use `module_logger.info/debug`. The loggers set up in the `_initialize()` method will write to both standard out (the terminal) and to a logfile.
-   - Add any captured statistics (number of rows updated, etc) to the `summary_rows` list near the end of `process()` to add them to the email message summary (the logfile is already included as an attachment)
-1. Run the tests in VS Code
-   - Testing -> Run Tests
 
 ## Running it as a Google Cloud Function
 
