@@ -12,174 +12,251 @@ from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
 import arcgis
-from palletjack import extract, load, transform, utils
+from arcgis.features import GeoAccessor
+from arcgis.gis._impl._content_manager import SharingLevel
+from palletjack import extract, load
 from supervisor.message_handlers import SendGridHandler
 from supervisor.models import MessageDetails, Supervisor
 
 #: This makes it work when calling with just `python <file>`/installing via pip and in the gcf framework, where
 #: the relative imports fail because of how it's calling the function.
 try:
-    from . import config, version
+    from . import config, helpers, version
 except ImportError:
     import config
+    import helpers
     import version
 
 
-def _get_secrets():
-    """A helper method for loading secrets from either a GCF mount point or the local src/deq_eid/secrets/secrets.json file
+class Skid:
+    def __init__(self):
+        self.secrets = SimpleNamespace(**self._get_secrets())
+        self.tempdir = TemporaryDirectory(ignore_cleanup_errors=True)
+        self.tempdir_path = Path(self.tempdir.name)
+        # self.log_name = f'{config.LOG_FILE_NAME}_{datetime.now().strftime("%Y%m%d-%H%M%S")}.txt'
+        self.log_name = f"{config.LOG_FILE_NAME}.txt"
+        self.log_path = self.tempdir_path / self.log_name
+        self._initialize_supervisor()
+        self.skid_logger = logging.getLogger(config.SKID_NAME)
 
-    Raises:
-        FileNotFoundError: If the secrets file can't be found.
-
-    Returns:
-        dict: The secrets .json loaded as a dictionary
-    """
-
-    secret_folder = Path("/secrets")
-
-    #: Try to get the secrets from the Cloud Function mount point
-    if secret_folder.exists():
-        return json.loads(Path("/secrets/app/secrets.json").read_text(encoding="utf-8"))
-
-    #: Otherwise, try to load a local copy for local development
-    secret_folder = Path(__file__).parent / "secrets"
-    if secret_folder.exists():
-        return json.loads((secret_folder / "secrets.json").read_text(encoding="utf-8"))
-
-    raise FileNotFoundError("Secrets folder not found; secrets not loaded.")
-
-
-def _initialize(log_path, sendgrid_api_key):
-    """A helper method to set up logging and supervisor
-
-    Args:
-        log_path (Path): File path for the logfile to be written
-        sendgrid_api_key (str): The API key for sendgrid for this particular application
-
-    Returns:
-        Supervisor: The supervisor object used for sending messages
-    """
-
-    skid_logger = logging.getLogger(config.SKID_NAME)
-    skid_logger.setLevel(config.LOG_LEVEL)
-    palletjack_logger = logging.getLogger("palletjack")
-    palletjack_logger.setLevel(config.LOG_LEVEL)
-
-    cli_handler = logging.StreamHandler(sys.stdout)
-    cli_handler.setLevel(config.LOG_LEVEL)
-    formatter = logging.Formatter(
-        fmt="%(levelname)-7s %(asctime)s %(name)15s:%(lineno)5s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-    )
-    cli_handler.setFormatter(formatter)
-
-    log_handler = logging.FileHandler(log_path, mode="w")
-    log_handler.setLevel(config.LOG_LEVEL)
-    log_handler.setFormatter(formatter)
-
-    skid_logger.addHandler(cli_handler)
-    skid_logger.addHandler(log_handler)
-    palletjack_logger.addHandler(cli_handler)
-    palletjack_logger.addHandler(log_handler)
-
-    #: Log any warnings at logging.WARNING
-    #: Put after everything else to prevent creating a duplicate, default formatter
-    #: (all log messages were duplicated if put at beginning)
-    logging.captureWarnings(True)
-
-    skid_logger.debug("Creating Supervisor object")
-    skid_supervisor = Supervisor(handle_errors=False)
-    sendgrid_settings = config.SENDGRID_SETTINGS
-    sendgrid_settings["api_key"] = sendgrid_api_key
-    skid_supervisor.add_message_handler(
-        SendGridHandler(
-            sendgrid_settings=sendgrid_settings, client_name=config.SKID_NAME, client_version=version.__version__
+        self.skid_logger.info("Initializing AGOL connection...")
+        self.gis = arcgis.gis.GIS(
+            config.AGOL_ORG,
+            self.secrets.AGOL_USER,
+            self.secrets.AGOL_PASSWORD,
         )
-    )
 
-    return skid_supervisor
+        self.skid_logger.info("Initializing Salesforce connection...")
+        salesforce_credentials = extract.SalesforceApiUserCredentials(
+            self.secrets.SF_CLIENT_SECRET,
+            self.secrets.SF_CLIENT_ID,
+        )
+        self.salesforce_extractor = extract.SalesforceRestLoader(
+            self.secrets.SF_ORG,
+            salesforce_credentials,
+        )
 
+    def __del__(self):
+        self.tempdir.cleanup()
 
-def _remove_log_file_handlers(log_name, loggers):
-    """A helper function to remove the file handlers so the tempdir will close correctly
+    @staticmethod
+    def _get_secrets():
+        """A helper method for loading secrets from either a GCF mount point or the local src/deq_eid/secrets/secrets.json file
 
-    Args:
-        log_name (str): The logfiles filename
-        loggers (List<str>): The loggers that are writing to log_name
-    """
+        Raises:
+            FileNotFoundError: If the secrets file can't be found.
 
-    for logger in loggers:
-        for handler in logger.handlers:
-            try:
-                if log_name in handler.stream.name:
-                    logger.removeHandler(handler)
-                    handler.close()
-            except Exception:
-                pass
+        Returns:
+            dict: The secrets .json loaded as a dictionary
+        """
 
+        secret_folder = Path("/secrets")
 
-def process():
-    """The main function that does all the work."""
+        #: Try to get the secrets from the Cloud Function mount point
+        if secret_folder.exists():
+            return json.loads(Path("/secrets/app/secrets.json").read_text(encoding="utf-8"))
 
-    #: Set up secrets, tempdir, supervisor, and logging
-    start = datetime.now()
+        #: Otherwise, try to load a local copy for local development
+        #: This file path might not work if extracted to its own module
+        secret_folder = Path(__file__).parent / "secrets"
+        if secret_folder.exists():
+            return json.loads((secret_folder / "secrets.json").read_text(encoding="utf-8"))
 
-    secrets = SimpleNamespace(**_get_secrets())
+        raise FileNotFoundError("Secrets folder not found; secrets not loaded.")
 
-    with TemporaryDirectory() as tempdir:
-        tempdir_path = Path(tempdir)
-        log_name = f'{config.LOG_FILE_NAME}_{start.strftime("%Y%m%d-%H%M%S")}.txt'
-        log_path = tempdir_path / log_name
+    def _initialize_supervisor(self):
+        """A helper method to set up logging and supervisor
 
-        skid_supervisor = _initialize(log_path, secrets.SENDGRID_API_KEY)
-        module_logger = logging.getLogger(config.SKID_NAME)
+        Returns:
+            Supervisor: The supervisor object used for sending messages
+        """
 
-        #: Get our GIS object via the ArcGIS API for Python
-        gis = arcgis.gis.GIS(config.AGOL_ORG, secrets.AGOL_USER, secrets.AGOL_PASSWORD)
+        skid_logger = logging.getLogger(config.SKID_NAME)
+        skid_logger.setLevel(config.LOG_LEVEL)
+        palletjack_logger = logging.getLogger("palletjack")
+        palletjack_logger.setLevel(config.LOG_LEVEL)
 
-        #########################################################################
-        #: Use the various palletjack classes and other code to do your work here
-        #########################################################################
+        cli_handler = logging.StreamHandler(sys.stdout)
+        cli_handler.setLevel(config.LOG_LEVEL)
+        formatter = logging.Formatter(
+            fmt="%(levelname)-7s %(asctime)s %(name)15s:%(lineno)5s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        cli_handler.setFormatter(formatter)
 
-        module_logger.info("Log messages with module_logger.info() or module_logger.debug()")
+        log_handler = logging.FileHandler(self.log_path, mode="w")
+        log_handler.setLevel(config.LOG_LEVEL)
+        log_handler.setFormatter(formatter)
 
-        #: Create a extract object to load your new data
-        extractor = extract.PostgresLoader("host", "database", "user", "password")
-        new_data_df = extractor.read_table_into_dataframe("table_name", "index_column", "crs", "shape_column")
+        skid_logger.addHandler(cli_handler)
+        skid_logger.addHandler(log_handler)
+        palletjack_logger.addHandler(cli_handler)
+        palletjack_logger.addHandler(log_handler)
 
-        #: Transform your data
-        new_data_df = new_data_df["new_column"] = "do custom transform stuff here"
-        new_data_df = transform.DataCleaning.rename_dataframe_columns_for_agol(new_data_df)
+        #: Log any warnings at logging.WARNING
+        #: Put after everything else to prevent creating a duplicate, default formatter
+        #: (all log messages were duplicated if put at beginning)
+        logging.captureWarnings(True)
 
-        #: Use retry for operations that may fail randomly (network issues, etc)
-        utils.retry("method_to_retry", "arg1", keyword_arg="arg2")
+        skid_logger.debug("Creating Supervisor object")
+        self.supervisor = Supervisor(handle_errors=False)
+        sendgrid_settings = config.SENDGRID_SETTINGS
+        sendgrid_settings["api_key"] = self.secrets.SENDGRID_API_KEY
+        self.supervisor.add_message_handler(
+            SendGridHandler(
+                sendgrid_settings=sendgrid_settings, client_name=config.SKID_NAME, client_version=version.__version__
+            )
+        )
 
-        #: Create a load object to load your new data
-        loader = load.FeatureServiceUpdater(gis, "item_id")
-        loader.update_features(new_data_df)
+    def _remove_log_file_handlers(self):
+        """A helper function to remove the file handlers so the tempdir will close correctly"""
 
-        end = datetime.now()
-
-        summary_message = MessageDetails()
-        summary_message.subject = f"{config.SKID_NAME} Update Summary"
-        summary_rows = [
-            f'{config.SKID_NAME} update {start.strftime("%Y-%m-%d")}',
-            "=" * 20,
-            "",
-            f'Start time: {start.strftime("%H:%M:%S")}',
-            f'End time: {end.strftime("%H:%M:%S")}',
-            f"Duration: {str(end-start)}",
-            #: Add other rows here containing summary info captured/calculated during the working portion of the skid,
-            #: like the number of rows updated or the number of successful attachment overwrites.
-        ]
-
-        summary_message.message = "\n".join(summary_rows)
-        summary_message.attachments = tempdir_path / log_name
-
-        skid_supervisor.notify(summary_message)
-
-        #: Remove file handler so the tempdir will close properly
         loggers = [logging.getLogger(config.SKID_NAME), logging.getLogger("palletjack")]
-        _remove_log_file_handlers(log_name, loggers)
+
+        for logger in loggers:
+            for handler in logger.handlers:
+                try:
+                    if self.log_name in handler.stream.name:
+                        logger.removeHandler(handler)
+                        handler.close()
+                except Exception:
+                    pass
+
+    def _get_environmental_incidents(self) -> GeoAccessor:
+        #: Load data from Salesforce and generate analyses using Summarize methods
+        self.skid_logger.info("loading records from Salesforce...")
+        records = helpers.SalesForceRecords(
+            self.salesforce_extractor,
+            "Case",
+            config.INCIDENTS_FIELDS,
+            "Utm_N_Y_7_dgts__c != null and Utm_E_X_6_dgts__c != null",
+        )
+        records.extract_data_from_salesforce()
+
+        self.skid_logger.info("converting to spatial dataframe...")
+        sdf = GeoAccessor.from_xy(records.df, "Easting", "Northing", sr=26912)
+
+        self.skid_logger.info("projecting...")
+        sdf.spatial.project(3857, "NAD_1983_To_WGS_1984_5")
+
+        return sdf
+
+    def _publish_layer(self, table_name, title, sdf):
+        import arcpy
+
+        #: save to a feature class just so that we can add field aliases
+        self.skid_logger.info("saving to feature class...")
+        feature_class_path = self.tempdir_path / f"{table_name}.gdb" / table_name
+        if arcpy.Exists(feature_class_path):
+            self.skid_logger.info("deleting existing feature class...")
+            arcpy.management.Delete(feature_class_path)
+        elif not arcpy.Exists(feature_class_path.parent):
+            self.skid_logger.info("creating gdb...")
+            arcpy.management.CreateFileGDB(
+                str(feature_class_path.parent.parent),
+                feature_class_path.parent.name,
+            )
+        sdf.spatial.to_featureclass(
+            location=feature_class_path,
+            sanitize_columns=False,
+        )
+
+        aliases = {field.agol_field: field.alias for field in config.INCIDENTS_FIELDS}
+        for field in arcpy.Describe(str(feature_class_path)).fields:
+            if field.name in aliases:
+                arcpy.management.AlterField(
+                    str(feature_class_path),
+                    field.name,
+                    new_field_alias=aliases[field.name],
+                )
+
+        zip_path = self.tempdir_path / f"{table_name}.zip"
+        helpers.zip_fgdb(feature_class_path.parent, zip_path)
+        fgdb_item = self.gis.content.add(
+            {
+                "type": "File Geodatabase",
+            },
+            data=str(zip_path),
+            folder="Interactive Map",
+        )
+        layer_item = fgdb_item.publish(
+            publish_parameters={
+                "name": title,
+                "layerInfo": {
+                    "capabilities": "Query",
+                },
+            },
+        )
+        manager = arcgis.features.FeatureLayerCollection.fromitem(layer_item).manager
+        manager.update_definition({"capabilities": "Query,Extract,Sync"}),
+        layer_item.update({"title": title})
+        layer_item.sharing.sharing_level = SharingLevel.EVERYONE
+        # layer_item.protect()
+
+        print(f"feature layer published: {title} | {layer_item.id}")
+
+    def update(self):
+        # start = datetime.now()
+
+        # incidents_loader = load.FeatureServiceUpdater(gis, config.STATEWIDE_LAYER_ITEMID, self.tempdir_path)
+        # statewide_count = statewide_loader.truncate_and_load_features(statewide_spatial)
+        pass
+
+        # end = datetime.now()
+
+        # summary_message = MessageDetails()
+        # summary_message.subject = f"{config.SKID_NAME} Update Summary"
+        # summary_rows = [
+        #     f'{config.SKID_NAME} update {start.strftime("%Y-%m-%d")}',
+        #     "=" * 20,
+        #     "",
+        #     f'Start time: {start.strftime("%H:%M:%S")}',
+        #     f'End time: {end.strftime("%H:%M:%S")}',
+        #     f"Duration: {str(end-start)}",
+        #     "",
+        #     f"Incidents rows loaded: {len(records.df)}",
+        # ]
+
+        # summary_message.message = "\n".join(summary_rows)
+        # summary_message.attachments = self.tempdir_path / self.log_name
+
+        # self.supervisor.notify(summary_message)
+
+        self._remove_log_file_handlers()
+
+    def publish(self):
+        """Publish new AGOL hosted feature layers"""
+
+        #: NOTE: this method requires arcpy
+
+        incidents_sdf = self._get_environmental_incidents()
+
+        self._publish_layer(
+            "EnvironmentalIncidents",
+            "Environmental Incidents",
+            incidents_sdf,
+        )
+
+        self._remove_log_file_handlers()
 
 
 def main(event, context):  # pylint: disable=unused-argument
@@ -205,13 +282,14 @@ def main(event, context):  # pylint: disable=unused-argument
         None. The output is written to Cloud Logging.
     """
 
-    #: This function must be called 'main' to act as the Google Cloud Function entry point. It must accept the two
-    #: arguments listed, but doesn't have to do anything with them (I haven't used them in anything yet).
-
     #: Call process() and any other functions you want to be run as part of the skid here.
-    process()
+    skid = Skid()
+
+    #: choose one of the following
+    skid.publish()  #: requires arcpy
+    # skid.update()
 
 
 #: Putting this here means you can call the file via `python main.py` and it will run. Useful for pre-GCF testing.
 if __name__ == "__main__":
-    process()
+    main(1, 2)  #: Just some junk args to satisfy the signature needed for Cloud Functions
