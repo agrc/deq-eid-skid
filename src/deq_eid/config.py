@@ -20,7 +20,6 @@ try:
 except Exception:
     HOST_NAME = socket.gethostname()
 
-AGOL_ORG = "https://utahdeq.maps.arcgis.com"
 SENDGRID_SETTINGS = {  #: Settings for SendGridHandler
     "from_address": "noreply@utah.gov",
     "to_addresses": ["stdavis@utah.gov"],
@@ -64,8 +63,6 @@ class FieldConfig:
 INCIDENTS_SF_API = "Case"
 INCIDENTS_TITLE = "Environmental Incidents"
 INCIDENTS_TABLE_NAME = "EnvironmentalIncidents"
-# INCIDENTS_ITEMID = ""  # dev
-INCIDENTS_ITEMID = "635d1639bf6d4d398700405c8e40acfe"  # prod
 INCIDENTS_FIELDS = (
     #: AGOL field name, Salesforce field name, AGOL Alias, type
     FieldConfig("Id", "Id", "Spill ID", "text"),
@@ -87,7 +84,6 @@ INCIDENTS_FIELDS = (
 CHEMICAL_SF_API = "Chemicals__c"
 CHEMICAL_TITLE = "Chemicals"
 CHEMICAL_TABLE_NAME = "DEQMAP_EIChemical"
-CHEMICAL_ITEMID = "650cbe060f67471b93b8eee4318ddff7"
 CHEMICAL_FIELDS = (
     FieldConfig("SpillId", "Case__c", "Spill ID", "text"),
     FieldConfig("Chemical_Number", "Legacy_Id__c", "Chemical Number", "text"),
@@ -102,7 +98,6 @@ CHEMICAL_FIELDS = (
 MEDIA_SF_API = "Impacted_Media__c"
 MEDIA_TITLE = "Impacted Media"
 MEDIA_TABLE_NAME = "DEQmap_ImpactedMedia"
-MEDIA_ITEMID = "5273dbb9871d482190ebda97ed0e0083"
 MEDIA_FIELDS = (
     FieldConfig("SpillId", "Case__c", "Spill ID", "text"),
     FieldConfig("WaterwayName", "Waterway_Name__c", "Waterway Name", "text"),

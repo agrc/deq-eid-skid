@@ -43,7 +43,7 @@ class Skid:
 
         self.skid_logger.info("Initializing AGOL connection...")
         self.gis = arcgis.gis.GIS(
-            config.AGOL_ORG,
+            self.secrets.AGOL_ORG,
             self.secrets.AGOL_USER,
             self.secrets.AGOL_PASSWORD,
         )
@@ -248,7 +248,7 @@ class Skid:
             },
         )
         manager = arcgis.features.FeatureLayerCollection.fromitem(layer_item).manager
-        manager.update_definition({"capabilities": "Query,Extract"}),
+        manager.update_definition({"capabilities": "Query,Extract"})
         layer_item.update({"title": title})
         layer_item.sharing.sharing_level = SharingLevel.EVERYONE
 
@@ -260,7 +260,7 @@ class Skid:
         incidents_sdf = self._get_incidents()
         incidents_loader = load.ServiceUpdater(
             self.gis,
-            config.INCIDENTS_ITEMID,
+            self.secrets.INCIDENTS_ITEM_ID,
             working_dir=self.tempdir_path,
         )
         incidents_count = incidents_loader.truncate_and_load(incidents_sdf)
@@ -268,7 +268,7 @@ class Skid:
         chemical_df = self._get_chemical()
         chemical_loader = load.ServiceUpdater(
             self.gis,
-            config.CHEMICAL_ITEMID,
+            self.secrets.CHEMICAL_ITEM_ID,
             service_type="table",
             working_dir=self.tempdir_path,
         )
@@ -277,7 +277,7 @@ class Skid:
         media_df = self._get_media()
         media_loader = load.ServiceUpdater(
             self.gis,
-            config.MEDIA_ITEMID,
+            self.secrets.MEDIA_ITEM_ID,
             service_type="table",
             working_dir=self.tempdir_path,
         )
