@@ -66,6 +66,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create deployment notification
+        if: github.event.release.prerelease == false
         uses: agrc/service-now-worknote-action@v1
         with:
           repo-token: ${{ github.token }}
