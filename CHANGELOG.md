@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-4](https://github.com/agrc/deq-eid-skid/compare/v1.0.0-3...v1.0.0-4) (2024-08-16)
+
+
+### Bug Fixes
+
+* memory suffix ([aae5923](https://github.com/agrc/deq-eid-skid/commit/aae5923cd6e459c13555bc8aa1dc4e1a331c78e8))
+
 ## [1.0.0-3](https://github.com/agrc/deq-eid-skid/compare/v1.0.0-2...v1.0.0-3) (2024-08-16)
 
 
