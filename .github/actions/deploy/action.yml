@@ -10,6 +10,10 @@ inputs:
   service_account_email:
     description: "The service account email"
     required: true
+  pause_schedule_job:
+    description: "Pause the scheduler job"
+    required: false
+    default: "no"
 
 runs:
   using: composite
@@ -81,3 +85,9 @@ runs:
             --message-body='eid updates' \
             --quiet
         fi
+
+    - name: 🙅 Pause Scheduler Job
+      shell: bash
+      if: inputs.pause_schedule_job != 'no'
+      run: |
+        gcloud scheduler jobs pause "${{ steps.globals.outputs.SCHEDULE_NAME }}" --location=us-central1 --quiet
