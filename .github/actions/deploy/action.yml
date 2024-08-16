@@ -51,7 +51,7 @@ runs:
         runtime: python311
         entry_point: subscribe
         source_dir: src/deq_eid
-        service_account_email: ${{ inputs.service_account_email }}
+        service_account: ${{ inputs.service_account_email }}
         event_trigger_type: google.cloud.pubsub.topic.v1.messagePublished
         event_trigger_pubsub_topic: projects/${{ inputs.project_id }}/topics/${{ steps.globals.outputs.TOPIC_NAME }}
         memory: 512Mb
