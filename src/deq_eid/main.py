@@ -12,8 +12,10 @@ from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
 import arcgis
+import functions_framework
 from arcgis.features import GeoAccessor
 from arcgis.gis._impl._content_manager import SharingLevel
+from cloudevents.http import CloudEvent
 from palletjack import extract, load
 from supervisor.message_handlers import SendGridHandler
 from supervisor.models import MessageDetails, Supervisor
@@ -342,25 +344,12 @@ class Skid:
         self._remove_log_file_handlers()
 
 
-def main(event, context):  # pylint: disable=unused-argument
+@functions_framework.cloud_event
+def subscribe(cloud_event: CloudEvent) -> None:
     """Entry point for Google Cloud Function triggered by pub/sub event
 
     Args:
-         event (dict):  The dictionary with data specific to this type of
-                        event. The `@type` field maps to
-                         `type.googleapis.com/google.pubsub.v1.PubsubMessage`.
-                        The `data` field maps to the PubsubMessage data
-                        in a base64-encoded string. The `attributes` field maps
-                        to the PubsubMessage attributes if any is present.
-         context (google.cloud.functions.Context): Metadata of triggering event
-                        including `event_id` which maps to the PubsubMessage
-                        messageId, `timestamp` which maps to the PubsubMessage
-                        publishTime, `event_type` which maps to
-                        `google.pubsub.topic.publish`, and `resource` which is
-                        a dictionary that describes the service API endpoint
-                        pubsub.googleapis.com, the triggering topic's name, and
-                        the triggering event type
-                        `type.googleapis.com/google.pubsub.v1.PubsubMessage`.
+        The CloudEvent object with data specific to this type of event. The `type` field maps to `type.googleapis.com/google.pubsub.v1.PubsubMessage`. The `data` field maps to the PubsubMessage data in a base64-encoded string. The `attributes` field maps to the PubsubMessage attributes if any is present.
     Returns:
         None. The output is written to Cloud Logging.
     """
@@ -374,4 +363,4 @@ def main(event, context):  # pylint: disable=unused-argument
 
 #: Putting this here means you can call the file via `python main.py` and it will run. Useful for pre-GCF testing.
 if __name__ == "__main__":
-    main(1, 2)  #: Just some junk args to satisfy the signature needed for Cloud Functions
+    subscribe(None)

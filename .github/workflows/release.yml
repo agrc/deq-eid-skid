@@ -1,0 +1,181 @@
+name: Release Events
+on:
+  release:
+    types: [published]
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  CLOUD_FUNCTION_MEMORY: 512Mb
+  CLOUD_FUCNTION_RUN_TIMEOUT: 240s
+  SCHEDULE_NAME: nightly
+  SCHEDULE_CRON: 0 5 * * * # daily at 11 PM MDT
+  SCHEDULE_DESCRIPTION: "Trigger the deq_eid-skid bot every evening at 11 PM MDT"
+
+concurrency:
+  group: "${{ github.head_ref || github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  deploy-dev:
+    name: Deploy to GCF
+    runs-on: ubuntu-latest
+    if: github.event.release.prerelease == true
+    environment:
+      name: dev
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: ⬇️ Set up code
+        uses: actions/checkout@v4
+
+      - name: 🗝️ Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          create_credentials_file: true
+          token_format: access_token
+          workload_identity_provider: ${{ secrets.IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
+
+      - name: 🚀 Deploy to Cloud Function
+        id: deploy
+        uses: google-github-actions/deploy-cloud-functions@v3
+        timeout-minutes: 10
+        with:
+          name: deq-eid-skid
+          runtime: python311
+          entry_point: subscribe
+          source_dir: src/deq_eid
+          service_account: cloud-function-sa@${{ secrets.PROJECT_ID }}.iam.gserviceaccount.com
+          event_trigger_type: google.cloud.pubsub.topic.v1.messagePublished
+          event_trigger_pubsub_topic: projects/${{ secrets.PROJECT_ID }}/topics/${{ env.SCHEDULE_NAME }}-topic
+          memory: ${{ env.CLOUD_FUNCTION_MEMORY }}
+          service_timeout: ${{ env.CLOUD_FUCNTION_RUN_TIMEOUT }}
+          secrets: |
+            /secrets/app/secrets.json=${{secrets.PROJECT_ID}}/skid-secrets
+          max_instance_count: 1
+          event_trigger_retry: false
+
+      - name: 📥 Create PubSub topic
+        run: |
+          if [ ! "$(gcloud pubsub topics list | grep $SCHEDULE_NAME-topic)" ]; then
+            gcloud pubsub topics create $SCHEDULE_NAME-topic --quiet
+          fi
+
+      - name: 🕰️ Create Cloud Scheduler
+        run: |
+          if [ ! "$(gcloud scheduler jobs list --location=us-central1 | grep $SCHEDULE_NAME)" ]; then
+            gcloud scheduler jobs create pubsub $SCHEDULE_NAME \
+              --description="$SCHEDULE_DESCRIPTION" \
+              --schedule="$SCHEDULE_CRON" \
+              --time-zone=America/Denver \
+              --location=us-central1 \
+              --topic=$SCHEDULE_NAME-topic \
+              --message-body='eid updates' \
+              --quiet
+          else
+            gcloud scheduler jobs update pubsub $SCHEDULE_NAME \
+              --description="$SCHEDULE_DESCRIPTION" \
+              --schedule="$SCHEDULE_CRON" \
+              --time-zone=America/Denver \
+              --location=us-central1 \
+              --topic=$SCHEDULE_NAME-topic \
+              --message-body='eid updates' \
+              --quiet
+          fi
+
+  deploy-prod:
+    name: Deploy to GCF
+    runs-on: ubuntu-latest
+    if: github.event.release.prerelease == false
+    environment:
+      name: prod
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: ⬇️ Set up code
+        uses: actions/checkout@v4
+
+      - name: 🗝️ Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          create_credentials_file: true
+          token_format: access_token
+          workload_identity_provider: ${{ secrets.IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
+
+      - name: 🚀 Deploy to Cloud Function
+        id: deploy
+        uses: google-github-actions/deploy-cloud-functions@v3
+        timeout-minutes: 10
+        with:
+          name: deq-eid-skid
+          runtime: python311
+          entry_point: subscribe
+          source_dir: src/deq_eid
+          service_account: cloud-function-sa@${{ secrets.PROJECT_ID }}.iam.gserviceaccount.com
+          event_trigger_type: google.cloud.pubsub.topic.v1.messagePublished
+          event_trigger_pubsub_topic: projects/${{ secrets.PROJECT_ID }}/topics/${{ env.SCHEDULE_NAME }}-topic
+          memory: ${{ env.CLOUD_FUNCTION_MEMORY }}
+          service_timeout: ${{ env.CLOUD_FUCNTION_RUN_TIMEOUT }}
+          secrets: |
+            /secrets/app/secrets.json=${{secrets.PROJECT_ID}}/skid-secrets
+          max_instance_count: 1
+          event_trigger_retry: false
+
+      - name: 📥 Create PubSub topic
+        run: |
+          if [ ! "$(gcloud pubsub topics list | grep $SCHEDULE_NAME-topic)" ]; then
+            gcloud pubsub topics create $SCHEDULE_NAME-topic --quiet
+          fi
+
+      - name: 🕰️ Create Cloud Scheduler
+        run: |
+          if [ ! "$(gcloud scheduler jobs list --location=us-central1 | grep $SCHEDULE_NAME)" ]; then
+            gcloud scheduler jobs create pubsub $SCHEDULE_NAME \
+              --description="$SCHEDULE_DESCRIPTION" \
+              --schedule="$SCHEDULE_CRON" \
+              --time-zone=America/Denver \
+              --location=us-central1 \
+              --topic=$SCHEDULE_NAME-topic \
+              --message-body='eid updates' \
+              --quiet
+          else
+            gcloud scheduler jobs update pubsub $SCHEDULE_NAME \
+              --description="$SCHEDULE_DESCRIPTION" \
+              --schedule="$SCHEDULE_CRON" \
+              --time-zone=America/Denver \
+              --location=us-central1 \
+              --topic=$SCHEDULE_NAME-topic \
+              --message-body='eid updates' \
+              --quiet
+          fi
+
+  notify:
+    name: Notifications
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Release Notifier
+        uses: agrc/release-issue-notifications-action@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create deployment notification
+        uses: agrc/service-now-worknote-action@v1
+        with:
+          repo-token: ${{ github.token }}
+          username: ${{ secrets.SN_USERNAME }}
+          password: ${{ secrets.SN_PASSWORD }}
+          instance-name: ${{ secrets.SN_INSTANCE }}
+          table-name: ${{ secrets.SN_TABLE }}
+          system-id: ${{ secrets.SN_SYS_ID }}

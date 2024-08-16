@@ -3,6 +3,7 @@
         "agrc",
         "arcgis",
         "arcpy",
+        "cloudevents",
         "Codecov",
         "dataframe",
         "DEQMAP",
