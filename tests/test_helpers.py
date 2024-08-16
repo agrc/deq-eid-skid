@@ -22,7 +22,8 @@ def test_convert_to_int_with_empty_string():
 
 
 def test_zip_fgdb_with_valid_path():
-    with Path(str(tempfile.TemporaryDirectory())) as temp_dir:
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir = Path(temp_dir)
         fgdb_path = temp_dir / "fgdb"
         os.makedirs(fgdb_path)
 
