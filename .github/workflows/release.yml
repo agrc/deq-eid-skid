@@ -9,7 +9,7 @@ concurrency:
 
 jobs:
   deploy-dev:
-    name: Deploy to GCF
+    name: Deploy Dev to GCF
     runs-on: ubuntu-latest
     if: github.event.release.prerelease == true
     environment:
@@ -29,9 +29,10 @@ jobs:
           project_id: ${{ secrets.PROJECT_ID }}
           identity_provider: ${{ secrets.IDENTITY_PROVIDER }}
           service_account_email: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
+          pause_schedule_job: "yes"
 
   deploy-prod:
-    name: Deploy to GCF
+    name: Deploy Prod to GCF
     runs-on: ubuntu-latest
     if: github.event.release.prerelease == false
     environment:
