@@ -18,6 +18,7 @@
         "getenv",
         "gethostname",
         "googleapis",
+        "gserviceaccount",
         "gvar",
         "instafail",
         "ITEMID",
