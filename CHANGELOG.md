@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-3](https://github.com/agrc/deq-eid-skid/compare/v1.0.0-2...v1.0.0-3) (2024-08-16)
+
+
+### Bug Fixes
+
+* use correct input for service account ([db99809](https://github.com/agrc/deq-eid-skid/commit/db99809fe569f9d2e9e5646780e6f973fb4b90d2))
+
 ## [1.0.0-2](https://github.com/agrc/deq-eid-skid/compare/v1.0.0-1...v1.0.0-2) (2024-08-16)
 
 
