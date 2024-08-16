@@ -221,6 +221,7 @@ class Skid:
                 str(feature_class_path),
             )
 
+        self.skid_logger.info("adding field aliases...")
         aliases = {field.agol_field: field.alias for field in fields}
         for field in arcpy.Describe(str(feature_class_path)).fields:
             if field.name in aliases:
@@ -230,6 +231,7 @@ class Skid:
                     new_field_alias=aliases[field.name],
                 )
 
+        self.skid_logger.info("zipping and publishing...")
         zip_path = self.tempdir_path / f"{table_name}.zip"
         helpers.zip_fgdb(feature_class_path.parent, zip_path)
         fgdb_item = self.gis.content.add(
@@ -241,7 +243,7 @@ class Skid:
         )
         layer_item = fgdb_item.publish(
             publish_parameters={
-                "name": table_name,
+                "name": table_name if self.secrets.IS_DEV is False else f"{table_name}_dev",
                 "layerInfo": {
                     "capabilities": "Query",
                 },
@@ -250,7 +252,8 @@ class Skid:
         manager = arcgis.features.FeatureLayerCollection.fromitem(layer_item).manager
         manager.update_definition({"capabilities": "Query,Extract"})
         layer_item.update({"title": title})
-        layer_item.sharing.sharing_level = SharingLevel.EVERYONE
+        if not self.secrets.IS_DEV:
+            layer_item.sharing.sharing_level = SharingLevel.EVERYONE
 
         print(f"feature layer published: {title} | {layer_item.id}")
 
