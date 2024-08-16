@@ -25,9 +25,9 @@ runs:
         echo "CLOUD_FUNCTION_MEMORY=512Mb" >> ${GITHUB_OUTPUT}
         echo "CLOUD_FUNCTION_RUN_TIMEOUT=240s" >> ${GITHUB_OUTPUT}
         echo "TOPIC_NAME=skid-topic" >> "${GITHUB_OUTPUT}"
-        echo "SCHEDULE_CRON="0 5 * * *" >> ${GITHUB_OUTPUT}
-        echo "SCHEDULE_NAME=nightly" >> "${GITHUB_OUTPUT}"
-        echo "SCHEDULE_DESCRIPTION="Trigger the deq_eid-skid bot every evening at 11 PM MDT" >> ${GITHUB_OUTPUT}
+        echo "CRON="0 5 * * *" >> ${GITHUB_OUTPUT}
+        echo "JOB_NAME=nightly" >> "${GITHUB_OUTPUT}"
+        echo "JOB_DESCRIPTION="Trigger the deq_eid-skid bot every evening at 11 PM MDT" >> ${GITHUB_OUTPUT}
 
     - name: 🗝️ Authenticate to Google Cloud
       id: auth
@@ -66,19 +66,19 @@ runs:
     - name: 🕰️ Create Main Cloud Scheduler
       shell: bash
       run: |
-        if [ ! "$(gcloud scheduler jobs list --location=us-central1 | grep ${{ steps.globals.outputs.SCHEDULE_NAME }})" ]; then
-          gcloud scheduler jobs create pubsub "${{ steps.globals.outputs.SCHEDULE_NAME }}" \
-            --description="${{ steps.globals.outputs.SCHEDULE_DESCRIPTION }}" \
-            --schedule="${{ steps.globals.outputs.SCHEDULE_CRON }}" \
+        if [ ! "$(gcloud scheduler jobs list --location=us-central1 | grep ${{ steps.globals.outputs.JOB_NAME }})" ]; then
+          gcloud scheduler jobs create pubsub "${{ steps.globals.outputs.JOB_NAME }}" \
+            --description="${{ steps.globals.outputs.JOB_DESCRIPTION }}" \
+            --schedule="${{ steps.globals.outputs.CRON }}" \
             --time-zone=America/Denver \
             --location=us-central1 \
             --topic="${{ steps.globals.outputs.TOPIC_NAME }}" \
             --message-body='eid updates' \
             --quiet
         else
-          gcloud scheduler jobs update pubsub "${{ steps.globals.outputs.SCHEDULE_NAME }}" \
-            --description="${{ steps.globals.outputs.SCHEDULE_DESCRIPTION }}" \
-            --schedule="${{ steps.globals.outputs.SCHEDULE_CRON }}" \
+          gcloud scheduler jobs update pubsub "${{ steps.globals.outputs.JOB_NAME }}" \
+            --description="${{ steps.globals.outputs.JOB_DESCRIPTION }}" \
+            --schedule="${{ steps.globals.outputs.CRON }}" \
             --time-zone=America/Denver \
             --location=us-central1 \
             --topic="${{ steps.globals.outputs.TOPIC_NAME }}" \
@@ -90,4 +90,4 @@ runs:
       shell: bash
       if: inputs.pause_schedule_job != 'no'
       run: |
-        gcloud scheduler jobs pause "${{ steps.globals.outputs.SCHEDULE_NAME }}" --location=us-central1 --quiet
+        gcloud scheduler jobs pause "${{ steps.globals.outputs.JOB_NAME }}" --location=us-central1 --quiet
