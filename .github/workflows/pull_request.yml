@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   test:
-    name: Setup and Test
+    name: Test
     runs-on: ubuntu-latest
 
     steps:
@@ -27,6 +27,11 @@ jobs:
         with:
           cache: pip
           cache-dependency-path: setup.py
+
+      - name: Install libkrb5 for Kerberos on Linux
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libkrb5-dev
 
       - name: 🏗 Install module
         run: pip install .[tests]
