@@ -22,8 +22,6 @@ runs:
       id: globals
       shell: bash
       run: |
-        echo "CLOUD_FUNCTION_MEMORY=512Mb" >> ${GITHUB_OUTPUT}
-        echo "CLOUD_FUNCTION_RUN_TIMEOUT=240s" >> ${GITHUB_OUTPUT}
         echo "TOPIC_NAME=skid-topic" >> "${GITHUB_OUTPUT}"
         echo "CRON="0 5 * * *" >> ${GITHUB_OUTPUT}
         echo "JOB_NAME=nightly" >> "${GITHUB_OUTPUT}"
@@ -57,7 +55,7 @@ runs:
         event_trigger_type: google.cloud.pubsub.topic.v1.messagePublished
         event_trigger_pubsub_topic: projects/${{ inputs.project_id }}/topics/${{ steps.globals.outputs.TOPIC_NAME }}
         memory: 512Mb
-        service_timeout: 15m
+        service_timeout: 540s
         secrets: |
           /secrets/app/secrets.json=${{ inputs.project_id }}/skid-secrets
         max_instance_count: 1
