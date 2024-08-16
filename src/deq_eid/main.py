@@ -141,14 +141,13 @@ class Skid:
                 except Exception:
                     pass
 
-    def _get_environmental_incidents(self) -> GeoAccessor:
-        #: Load data from Salesforce and generate analyses using Summarize methods
-        self.skid_logger.info("loading records from Salesforce...")
+    def _get_incidents(self) -> GeoAccessor:
+        self.skid_logger.info("loading environmental incident records from Salesforce...")
         records = helpers.SalesForceRecords(
             self.salesforce_extractor,
-            "Case",
+            config.INCIDENTS_SF_API,
             config.INCIDENTS_FIELDS,
-            "Utm_N_Y_7_dgts__c != null and Utm_E_X_6_dgts__c != null",
+            where_clause="Utm_N_Y_7_dgts__c != null and Utm_E_X_6_dgts__c != null",
         )
         records.extract_data_from_salesforce()
 
@@ -157,10 +156,39 @@ class Skid:
 
         self.skid_logger.info("projecting...")
         sdf.spatial.project(3857, "NAD_1983_To_WGS_1984_5")
+        sdf.spatial.sr = arcgis.geometry.SpatialReference(wkid=3857)
+
+        sdf["Date_Discovered"] = sdf["Date_Discovered_For_Filter"].dt.strftime("%m/%d/%Y")
+
+        sdf = sdf.query("Northing > 0 & Easting > 0")
 
         return sdf
 
-    def _publish_layer(self, table_name, title, sdf):
+    def _get_chemical(self) -> GeoAccessor:
+        self.skid_logger.info("loading chemicals records from Salesforce...")
+        records = helpers.SalesForceRecords(
+            self.salesforce_extractor,
+            config.CHEMICAL_SF_API,
+            config.CHEMICAL_FIELDS,
+            None,
+        )
+        records.extract_data_from_salesforce()
+
+        return records.df
+
+    def _get_media(self) -> GeoAccessor:
+        self.skid_logger.info("loading impacted media records from Salesforce...")
+        records = helpers.SalesForceRecords(
+            self.salesforce_extractor,
+            config.MEDIA_SF_API,
+            config.MEDIA_FIELDS,
+            None,
+        )
+        records.extract_data_from_salesforce()
+
+        return records.df
+
+    def _publish_dataset(self, table_name, title, fields, sdf, type):
         import arcpy
 
         #: save to a feature class just so that we can add field aliases
@@ -175,12 +203,23 @@ class Skid:
                 str(feature_class_path.parent.parent),
                 feature_class_path.parent.name,
             )
-        sdf.spatial.to_featureclass(
-            location=feature_class_path,
-            sanitize_columns=False,
-        )
 
-        aliases = {field.agol_field: field.alias for field in config.INCIDENTS_FIELDS}
+        if type == "layer":
+            self.skid_logger.info("exporting to feature class...")
+            sdf.spatial.to_featureclass(
+                location=feature_class_path,
+                sanitize_columns=False,
+            )
+        else:
+            self.skid_logger.info("exporting to table...")
+            csv_file_path = self.tempdir_path / f"{table_name}.csv"
+            sdf.to_csv(csv_file_path, index=False)
+            arcpy.conversion.ExportTable(
+                str(csv_file_path),
+                str(feature_class_path),
+            )
+
+        aliases = {field.agol_field: field.alias for field in fields}
         for field in arcpy.Describe(str(feature_class_path)).fields:
             if field.name in aliases:
                 arcpy.management.AlterField(
@@ -200,46 +239,71 @@ class Skid:
         )
         layer_item = fgdb_item.publish(
             publish_parameters={
-                "name": title,
+                "name": table_name,
                 "layerInfo": {
                     "capabilities": "Query",
                 },
             },
         )
         manager = arcgis.features.FeatureLayerCollection.fromitem(layer_item).manager
-        manager.update_definition({"capabilities": "Query,Extract,Sync"}),
+        manager.update_definition({"capabilities": "Query,Extract"}),
         layer_item.update({"title": title})
         layer_item.sharing.sharing_level = SharingLevel.EVERYONE
-        # layer_item.protect()
 
         print(f"feature layer published: {title} | {layer_item.id}")
 
     def update(self):
-        # start = datetime.now()
+        start = datetime.now()
 
-        # incidents_loader = load.FeatureServiceUpdater(gis, config.STATEWIDE_LAYER_ITEMID, self.tempdir_path)
-        # statewide_count = statewide_loader.truncate_and_load_features(statewide_spatial)
-        pass
+        incidents_sdf = self._get_incidents()
+        incidents_loader = load.ServiceUpdater(
+            self.gis,
+            config.INCIDENTS_ITEMID,
+            working_dir=self.tempdir_path,
+        )
+        incidents_count = incidents_loader.truncate_and_load(incidents_sdf)
 
-        # end = datetime.now()
+        chemical_df = self._get_chemical()
+        chemical_loader = load.ServiceUpdater(
+            self.gis,
+            config.CHEMICAL_ITEMID,
+            service_type="table",
+            working_dir=self.tempdir_path,
+        )
+        chemical_count = chemical_loader.truncate_and_load(chemical_df)
 
-        # summary_message = MessageDetails()
-        # summary_message.subject = f"{config.SKID_NAME} Update Summary"
-        # summary_rows = [
-        #     f'{config.SKID_NAME} update {start.strftime("%Y-%m-%d")}',
-        #     "=" * 20,
-        #     "",
-        #     f'Start time: {start.strftime("%H:%M:%S")}',
-        #     f'End time: {end.strftime("%H:%M:%S")}',
-        #     f"Duration: {str(end-start)}",
-        #     "",
-        #     f"Incidents rows loaded: {len(records.df)}",
-        # ]
+        media_df = self._get_media()
+        media_loader = load.ServiceUpdater(
+            self.gis,
+            config.MEDIA_ITEMID,
+            service_type="table",
+            working_dir=self.tempdir_path,
+        )
+        media_count = media_loader.truncate_and_load(media_df)
 
-        # summary_message.message = "\n".join(summary_rows)
-        # summary_message.attachments = self.tempdir_path / self.log_name
+        end = datetime.now()
 
-        # self.supervisor.notify(summary_message)
+        summary_message = MessageDetails()
+        summary_message.subject = f"{config.SKID_NAME} Update Summary"
+        summary_rows = [
+            f'{config.SKID_NAME} update {start.strftime("%Y-%m-%d")}',
+            "=" * 20,
+            "",
+            f'Start time: {start.strftime("%H:%M:%S")}',
+            f'End time: {end.strftime("%H:%M:%S")}',
+            f"Duration: {str(end-start)}",
+            "",
+            f"{config.INCIDENTS_TITLE} rows loaded: {incidents_count}",
+            f"{config.CHEMICAL_TITLE} rows loaded: {chemical_count}",
+            f"{config.MEDIA_TITLE} rows loaded: {media_count}",
+        ]
+
+        summary_message.message = "\n".join(summary_rows)
+        summary_message.attachments = self.tempdir_path / self.log_name
+
+        # print(summary_message.message)
+
+        self.supervisor.notify(summary_message)
 
         self._remove_log_file_handlers()
 
@@ -248,12 +312,31 @@ class Skid:
 
         #: NOTE: this method requires arcpy
 
-        incidents_sdf = self._get_environmental_incidents()
-
-        self._publish_layer(
-            "EnvironmentalIncidents",
-            "Environmental Incidents",
+        incidents_sdf = self._get_incidents()
+        self._publish_dataset(
+            config.INCIDENTS_TABLE_NAME,
+            config.INCIDENTS_TITLE,
+            config.INCIDENTS_FIELDS,
             incidents_sdf,
+            "layer",
+        )
+
+        chemical_df = self._get_chemical()
+        self._publish_dataset(
+            config.CHEMICAL_TABLE_NAME,
+            config.CHEMICAL_TITLE,
+            config.CHEMICAL_FIELDS,
+            chemical_df,
+            "table",
+        )
+
+        media_df = self._get_media()
+        self._publish_dataset(
+            config.MEDIA_TABLE_NAME,
+            config.MEDIA_TITLE,
+            config.MEDIA_FIELDS,
+            media_df,
+            "table",
         )
 
         self._remove_log_file_handlers()
@@ -282,12 +365,11 @@ def main(event, context):  # pylint: disable=unused-argument
         None. The output is written to Cloud Logging.
     """
 
-    #: Call process() and any other functions you want to be run as part of the skid here.
     skid = Skid()
 
     #: choose one of the following
-    skid.publish()  #: requires arcpy
-    # skid.update()
+    # skid.publish()  #: requires arcpy
+    skid.update()
 
 
 #: Putting this here means you can call the file via `python main.py` and it will run. Useful for pre-GCF testing.

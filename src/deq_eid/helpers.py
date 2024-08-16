@@ -49,11 +49,16 @@ class SalesForceRecords:
         """
 
         fields_string = self._build_columns_string()
+        query = f"SELECT {fields_string} from {self.salesforce_api}"
+
+        if self.where_clause is not None:
+            query += f" WHERE {self.where_clause}"
 
         #: Main query with just our desired fields
+        print(f"Querying Salesforce: {query}")
         self.df = self.salesforce_extractor.get_records(
             "services/data/v60.0/query/",
-            f"SELECT {fields_string} from {self.salesforce_api} where {self.where_clause}",
+            query,
         )
 
         self.df.drop(columns=["attributes"], inplace=True)
@@ -76,7 +81,13 @@ class SalesForceRecords:
         #: ints
         self.df = palletjack.transform.DataCleaning.switch_to_nullable_int(
             self.df,
-            [c.agol_field for c in self.field_configs if c.field_type == c.integer],
+            [c.agol_field for c in self.field_configs if c.field_type == config.FieldConfig.integer],
+        )
+
+        #: floats
+        self.df = palletjack.transform.DataCleaning.switch_to_float(
+            self.df,
+            [c.agol_field for c in self.field_configs if c.field_type == config.FieldConfig.float],
         )
 
         #: dates
@@ -84,9 +95,6 @@ class SalesForceRecords:
             self.df,
             [c.agol_field for c in self.field_configs if c.field_type == c.date],
         )
-        self.df["Date_Discovered"] = self.df["Date_Discovered_For_Filter"].dt.strftime("%m/%d/%Y")
-
-        self.df = self.df.query("Northing > 0 & Easting > 0 & DERRID.notnull()")
 
     def _build_columns_string(self) -> str:
         """Build a string of needed columns for the SOQL query based on field mapping and some custom fields

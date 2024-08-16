@@ -34,6 +34,7 @@ class FieldConfig:
     #: field types
     text = "text"
     integer = "integer"
+    float = "float"
     date = "date"
     static = "static"
     composite = "composite"
@@ -60,10 +61,14 @@ class FieldConfig:
         self.composite_format = composite_format
 
 
+INCIDENTS_SF_API = "Case"
+INCIDENTS_TITLE = "Environmental Incidents"
+INCIDENTS_TABLE_NAME = "EnvironmentalIncidents"
 # INCIDENTS_ITEMID = ""  # dev
-INCIDENTS_ITEMID = "84db5ee24bf240c89b191bc688eb49c6"  # prod
+INCIDENTS_ITEMID = "635d1639bf6d4d398700405c8e40acfe"  # prod
 INCIDENTS_FIELDS = (
     #: AGOL field name, Salesforce field name, AGOL Alias, type
+    FieldConfig("Id", "Id", "Spill ID", "text"),
     FieldConfig("SITEDESC", None, "Site Program Description", "static", static_value="Environmental Incidents"),
     FieldConfig("Northing", "Utm_N_Y_7_dgts__c", "Northing", "integer"),
     FieldConfig("Easting", "Utm_E_X_6_dgts__c", "Easting", "integer"),
@@ -74,7 +79,35 @@ INCIDENTS_FIELDS = (
     FieldConfig("Responsible_Party", "Responsible_Party_Name__c", "Responsible Party", "text"),
     FieldConfig("County", "County__c", "County", "text"),
     FieldConfig("Map_Label", None, "Map Label", "composite", composite_format="{SITEDESC} - {DERRID}"),
-    FieldConfig("DERRID", "INR_Number__c", "DERR ID", "integer"),
+    FieldConfig("DERRID", "INR_Number__c", "DERR ID", "text"),
     FieldConfig("Date_Discovered_For_Filter", "Date_Time_Discovered__c", "Date Discovered For Filter", "date"),
     FieldConfig("Incident_summary", "Event_Description_Initial_Actions_Taken__c", "Incident Summary", "text"),
+)
+
+CHEMICAL_SF_API = "Chemicals__c"
+CHEMICAL_TITLE = "Chemicals"
+CHEMICAL_TABLE_NAME = "DEQMAP_EIChemical"
+CHEMICAL_ITEMID = "650cbe060f67471b93b8eee4318ddff7"
+CHEMICAL_FIELDS = (
+    FieldConfig("SpillId", "Case__c", "Spill ID", "text"),
+    FieldConfig("Chemical_Number", "Legacy_Id__c", "Chemical Number", "text"),
+    FieldConfig("Chemical", "Material_Chem__c", "Chemical Name", "text"),
+    FieldConfig("Chemical_Name", "Chemical_Name_Text__c", "Chemical Name Text", "text"),
+    FieldConfig("Chemical_Other", "If_Other_Material_Chem_describe__c", "Other Chemical", "text"),
+    FieldConfig("Amount", "Amount__c", "Amount", "text"),
+    FieldConfig("Amount_Type", "Amount_Type__c", "Amount Type", "text"),
+    FieldConfig("Amount_Other", "If_Other_Amount_Type_describe__c", "Amount Other", "text"),
+)
+
+MEDIA_SF_API = "Impacted_Media__c"
+MEDIA_TITLE = "Impacted Media"
+MEDIA_TABLE_NAME = "DEQmap_ImpactedMedia"
+MEDIA_ITEMID = "5273dbb9871d482190ebda97ed0e0083"
+MEDIA_FIELDS = (
+    FieldConfig("SpillId", "Case__c", "Spill ID", "text"),
+    FieldConfig("WaterwayName", "Waterway_Name__c", "Waterway Name", "text"),
+    FieldConfig("ImpactedMediaOther", "If_Other_Impacted_Media_describe__c", "Impacted Media Other", "text"),
+    FieldConfig("ImpactedMedia", "Impacted_Media_List__c", "Impacted Media", "text"),
+    FieldConfig("In_NearWater", "In_Near_Surface_Water__c", "In or Near Water", "text"),
+    FieldConfig("LandUse", "Land_Use__c", "Land Use", "text"),
 )
