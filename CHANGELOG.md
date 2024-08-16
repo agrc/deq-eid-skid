@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-1](https://github.com/agrc/deq-eid-skid/compare/v1.0.0-0...v1.0.0-1) (2024-08-16)
+
+
+### Bug Fixes
+
+* run notify only if one of the deploy jobs succeeds ([da2b8f8](https://github.com/agrc/deq-eid-skid/commit/da2b8f84ee999023e80e101589c749f7d7f40e62))
+
 ## 1.0.0-0 (2024-08-16)
 
 
