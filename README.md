@@ -51,7 +51,6 @@ Work with the GCP maestros to set up a Google project via terraform. They can us
 - Cloud Pub/Sub (creates a topic that links Scheduler and the cloud function)
 - Secret Manager
   - A `secrets.json` with the requisite login info
-  - A `known_hosts` file (for loading from sftp) or a service account private key file (for loading from Google Sheets)
 
 ### Setup GitHub CI Pipeline
 
@@ -68,6 +67,6 @@ The cloud functions may need 512 MB or 1 GB of RAM to run successfully. The sour
 
 Skids use GCP Secrets Manager to make secrets available to the function. They are mounted as local files with a specified mounting directory (`/secrets`). In this mounting scheme, a folder can only hold a single secret, so multiple secrets are handled via nesting folders (ie, `/secrets/app` and `secrets/ftp`). These mount points are specified in the GitHub CI action workflow.
 
-The `secrets.json` folder holds all the login info, etc. A template is available in the repo's root directory. This is read into a dictionary with the `json` package via the `_get_secrets()` function. Other files (`known_hosts`, service account keys) can be handled in a similar manner or just have their path available for direct access.
+The `secrets.json` folder holds all the login info, etc. A template is available in the repo's root directory. This is read into a dictionary with the `json` package via the `_get_secrets()` function. Other files (service account keys) can be handled in a similar manner or just have their path available for direct access.
 
 A separate `config.py` module holds non-secret configuration values. These are accessed by importing the module and accessing them directly.
