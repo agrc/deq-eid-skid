@@ -6,6 +6,10 @@ on:
       - main
       - dev
 
+concurrency:
+  group: "${{ github.head_ref || github.ref }}"
+  cancel-in-progress: true
+
 jobs:
   release-please:
     name: Create release
