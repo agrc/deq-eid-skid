@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-2](https://github.com/agrc/deq-eid-skid/compare/v1.0.0-1...v1.0.0-2) (2024-08-16)
+
+
+### Bug Fixes
+
+* decrease service timeout to comply with gcp requirement ([55bd0a7](https://github.com/agrc/deq-eid-skid/commit/55bd0a7efa12c8a868dad4105f3bb88d5fae415f))
+
 ## [1.0.0-1](https://github.com/agrc/deq-eid-skid/compare/v1.0.0-0...v1.0.0-1) (2024-08-16)
 
 
