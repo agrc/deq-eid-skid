@@ -1,0 +1,83 @@
+name: Deploy to GCP
+description: Deploy to GCP
+inputs:
+  project_id:
+    description: "The GCP project ID"
+    required: true
+  identity_provider:
+    description: "The identity provider for the workload identity"
+    required: true
+  service_account_email:
+    description: "The service account email"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set globals
+      id: globals
+      shell: bash
+      run: |
+        echo "CLOUD_FUNCTION_MEMORY=512Mb" >> ${GITHUB_OUTPUT}
+        echo "CLOUD_FUNCTION_RUN_TIMEOUT=240s" >> ${GITHUB_OUTPUT}
+        echo "TOPIC_NAME=skid-topic" >> "${GITHUB_OUTPUT}"
+        echo "SCHEDULE_CRON="0 5 * * *" >> ${GITHUB_OUTPUT}
+        echo "SCHEDULE_NAME=nightly" >> "${GITHUB_OUTPUT}"
+        echo "SCHEDULE_DESCRIPTION="Trigger the deq_eid-skid bot every evening at 11 PM MDT" >> ${GITHUB_OUTPUT}
+
+    - name: 🗝️ Authenticate to Google Cloud
+      id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        create_credentials_file: true
+        token_format: access_token
+        workload_identity_provider: ${{ inputs.identity_provider }}
+        service_account: ${{ inputs.service_account_email }}
+
+    - name: 📥 Create Main PubSub topic
+      shell: bash
+      run: |
+        if [ ! "$(gcloud pubsub topics list | grep ${{ steps.globals.outputs.TOPIC_NAME }})" ]; then
+          gcloud pubsub topics create ${{ steps.globals.outputs.TOPIC_NAME }} --quiet
+        fi
+
+    - name: 🚀 Deploy Main Cloud Function
+      id: deploy
+      uses: google-github-actions/deploy-cloud-functions@v3
+      with:
+        name: deq-eid-skid
+        runtime: python311
+        entry_point: subscribe
+        source_dir: src/deq_eid
+        service_account_email: ${{ inputs.service_account_email }}
+        event_trigger_type: google.cloud.pubsub.topic.v1.messagePublished
+        event_trigger_pubsub_topic: projects/${{ inputs.project_id }}/topics/${{ steps.globals.outputs.TOPIC_NAME }}
+        memory: 512Mb
+        service_timeout: 15m
+        secrets: |
+          /secrets/app/secrets.json=${{ inputs.project_id }}/skid-secrets
+        max_instance_count: 1
+        event_trigger_retry: false
+
+    - name: 🕰️ Create Main Cloud Scheduler
+      shell: bash
+      run: |
+        if [ ! "$(gcloud scheduler jobs list --location=us-central1 | grep ${{ steps.globals.outputs.SCHEDULE_NAME }})" ]; then
+          gcloud scheduler jobs create pubsub "${{ steps.globals.outputs.SCHEDULE_NAME }}" \
+            --description="${{ steps.globals.outputs.SCHEDULE_DESCRIPTION }}" \
+            --schedule="${{ steps.globals.outputs.SCHEDULE_CRON }}" \
+            --time-zone=America/Denver \
+            --location=us-central1 \
+            --topic="${{ steps.globals.outputs.TOPIC_NAME }}" \
+            --message-body='eid updates' \
+            --quiet
+        else
+          gcloud scheduler jobs update pubsub "${{ steps.globals.outputs.SCHEDULE_NAME }}" \
+            --description="${{ steps.globals.outputs.SCHEDULE_DESCRIPTION }}" \
+            --schedule="${{ steps.globals.outputs.SCHEDULE_CRON }}" \
+            --time-zone=America/Denver \
+            --location=us-central1 \
+            --topic="${{ steps.globals.outputs.TOPIC_NAME }}" \
+            --message-body='eid updates' \
+            --quiet
+        fi
