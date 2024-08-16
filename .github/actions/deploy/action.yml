@@ -54,7 +54,7 @@ runs:
         service_account: ${{ inputs.service_account_email }}
         event_trigger_type: google.cloud.pubsub.topic.v1.messagePublished
         event_trigger_pubsub_topic: projects/${{ inputs.project_id }}/topics/${{ steps.globals.outputs.TOPIC_NAME }}
-        memory: 512Mb
+        memory: 512M
         service_timeout: 540s
         secrets: |
           /secrets/app/secrets.json=${{ inputs.project_id }}/skid-secrets
