@@ -3,10 +3,6 @@ on:
   release:
     types: [published]
 
-concurrency:
-  group: "${{ github.head_ref || github.ref }}"
-  cancel-in-progress: true
-
 jobs:
   deploy-dev:
     name: Deploy Dev to GCF
