@@ -11,8 +11,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  release-please:
+  release:
     name: Create release
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -20,7 +21,6 @@ jobs:
 
     steps:
       - name: 🚀 Create Release
-        id: release-please
         uses: agrc/release-composite-action@v1
         with:
           prerelease: ${{ github.ref_name == 'dev' }}
@@ -31,3 +31,26 @@ jobs:
           github-app-email: ${{ secrets.UGRC_RELEASE_BOT_EMAIL }}
           release-type: python
           extra-files: src/deq_eid/version.py
+
+  deploy-dev:
+    name: Deploy to GCF - dev
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'dev'
+    environment:
+      name: dev
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: ⬇️ Set up code
+        uses: actions/checkout@v4
+
+      - name: 🚀 Deploy
+        uses: ./.github/actions/deploy
+        timeout-minutes: 15
+        with:
+          project_id: ${{ secrets.PROJECT_ID }}
+          identity_provider: ${{ secrets.IDENTITY_PROVIDER }}
+          service_account_email: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
+          pause_schedule_job: "yes"
