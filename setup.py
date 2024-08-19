@@ -8,10 +8,16 @@ from pathlib import Path
 
 from setuptools import find_packages, setup
 
+project_folder = Path(__file__).parent / "src" / "deq_eid"
+
 #: Load version from source file
 version = {}
-version_file = Path(__file__).parent / "src" / "deq_eid" / "version.py"
+version_file = project_folder / "version.py"
 exec(version_file.read_text(), version)
+
+#: Load dependencies from requirements file so that we can keep a single source of truth
+requirements_file = project_folder / "requirements.txt"
+dependencies_txt = requirements_file.read_text()
 
 setup(
     name="deq_eid",
@@ -37,12 +43,7 @@ setup(
         "Issue Tracker": "https://github.com/agrc/deq-eid-skid/issues",
     },
     keywords=["gis"],
-    install_requires=[
-        "agrc-supervisor==3.0.*",
-        "functions-framework>=3.8.0,<3.9",
-        "requests<2.32",
-        "ugrc-palletjack==5.*",
-    ],
+    install_requires=dependencies_txt.strip().split("\n"),
     extras_require={
         "tests": [
             "pytest-cov>=3,<6",
@@ -57,9 +58,4 @@ setup(
     setup_requires=[
         "pytest-runner",
     ],
-    entry_points={
-        "console_scripts": [
-            "deq_eid = deq_eid.main:function",
-        ]
-    },
 )
