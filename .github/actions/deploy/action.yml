@@ -23,7 +23,7 @@ runs:
       shell: bash
       run: |
         echo "TOPIC_NAME=skid-topic" >> "${GITHUB_OUTPUT}"
-        echo "CRON="0 5 * * *" >> "${GITHUB_OUTPUT}"
+        echo "CRON=0 5 * * *" >> "${GITHUB_OUTPUT}"
         echo "JOB_NAME=nightly" >> "${GITHUB_OUTPUT}"
         echo "JOB_DESCRIPTION="Trigger the deq_eid-skid bot every evening at 11 PM MDT" >> "${GITHUB_OUTPUT}"
 
