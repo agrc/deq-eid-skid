@@ -347,12 +347,9 @@ class Skid:
         self._remove_log_file_handlers()
 
 
-@functions_framework.cloud_event
-def subscribe(cloud_event: CloudEvent) -> None:
-    """Entry point for Google Cloud Function triggered by pub/sub event
+def process() -> None:
+    """Entry point triggered by the scheduler job
 
-    Args:
-        The CloudEvent object with data specific to this type of event. The `type` field maps to `type.googleapis.com/google.pubsub.v1.PubsubMessage`. The `data` field maps to the PubsubMessage data in a base64-encoded string. The `attributes` field maps to the PubsubMessage attributes if any is present.
     Returns:
         None. The output is written to Cloud Logging.
     """
@@ -364,6 +361,5 @@ def subscribe(cloud_event: CloudEvent) -> None:
     skid.update()
 
 
-#: Putting this here means you can call the file via `python main.py` and it will run. Useful for pre-GCF testing.
 if __name__ == "__main__":
-    subscribe(None)
+    process()

@@ -5,7 +5,7 @@ on:
 
 jobs:
   deploy-prod:
-    name: Deploy Prod to GCF
+    name: Deploy Prod
     runs-on: ubuntu-latest
     environment:
       name: prod
@@ -24,6 +24,7 @@ jobs:
           project_id: ${{ secrets.PROJECT_ID }}
           identity_provider: ${{ secrets.IDENTITY_PROVIDER }}
           service_account_email: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   notify:
     name: Notifications

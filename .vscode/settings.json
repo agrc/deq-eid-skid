@@ -1,9 +1,12 @@
 {
     "cSpell.words": [
+        "accesstoken",
         "agrc",
         "arcgis",
         "arcpy",
+        "Buildx",
         "cloudevents",
+        "cloudrun",
         "Codecov",
         "dataframe",
         "DEQMAP",

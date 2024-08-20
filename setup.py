@@ -58,4 +58,9 @@ setup(
     setup_requires=[
         "pytest-runner",
     ],
+    entry_points={
+        "console_scripts": [
+            "deq-eid-skid=deq_eid.main:process",
+        ],
+    },
 )

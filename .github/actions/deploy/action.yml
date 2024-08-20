@@ -1,4 +1,4 @@
-name: Deploy to GCP
+name: Deploy
 description: Deploy to GCP
 inputs:
   project_id:
@@ -14,6 +14,9 @@ inputs:
     description: "Pause the scheduler job"
     required: false
     default: "no"
+  github_token:
+    description: "The GitHub token"
+    required: true
 
 runs:
   using: composite
@@ -31,56 +34,78 @@ runs:
       id: auth
       uses: google-github-actions/auth@v2
       with:
-        create_credentials_file: true
         token_format: access_token
         workload_identity_provider: ${{ inputs.identity_provider }}
         service_account: ${{ inputs.service_account_email }}
 
-    - name: 📥 Create Main PubSub topic
-      shell: bash
-      run: |
-        if [ ! "$(gcloud pubsub topics list | grep ${{ steps.globals.outputs.TOPIC_NAME }})" ]; then
-          gcloud pubsub topics create ${{ steps.globals.outputs.TOPIC_NAME }} --quiet
-        fi
+    - name: 🐳 Set up Docker Buildx
+      id: builder
+      uses: docker/setup-buildx-action@v3
 
-    - name: 🚀 Deploy Main Cloud Function
-      id: deploy
-      uses: google-github-actions/deploy-cloud-functions@v3
+    - name: 🗝️ Authenticate Docker to Google Cloud
+      uses: docker/login-action@v3
       with:
-        name: deq-eid-skid
-        runtime: python311
-        entry_point: subscribe
-        source_dir: src/deq_eid
-        service_account: cloud-function-sa@${{ inputs.project_id }}.iam.gserviceaccount.com
-        event_trigger_type: google.cloud.pubsub.topic.v1.messagePublished
-        event_trigger_pubsub_topic: projects/${{ inputs.project_id }}/topics/${{ steps.globals.outputs.TOPIC_NAME }}
-        memory: 1G
-        service_timeout: 540s
+        registry: us-central1-docker.pkg.dev
+        username: oauth2accesstoken
+        password: ${{ steps.auth.outputs.access_token }}
+
+    - name: 🏷️ Extract tags from GitHub
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        github-token: ${{ inputs.github_token }}
+        images: us-central1-docker.pkg.dev/${{ inputs.project_id }}/images/job
+        tags: |
+          type=ref,suffix=-{{sha}},event=branch
+          type=ref,prefix=pr-,suffix=-{{sha}},event=pr
+          type=semver,pattern={{version}}
+          latest
+
+    - name: 📦 Build and push image
+      uses: docker/build-push-action@v6
+      with:
+        builder: ${{ steps.builder.outputs.name }}
+        tags: ${{ steps.meta.outputs.tags }}
+        context: .
+        file: ./Dockerfile
+        push: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        provenance: false
+
+    - name: 🚀 Deploy Main Cloud Run Job
+      id: deploy
+      uses: google-github-actions/deploy-cloudrun@v2
+      with:
+        job: ${{ steps.globals.outputs.JOB_NAME }}
+        image: us-central1-docker.pkg.dev/${{ inputs.project_id }}/images/job:latest
+        timeout: 25m
         secrets: |
-          /secrets/app/secrets.json=${{ inputs.project_id }}/skid-secrets
-        max_instance_count: 1
-        event_trigger_retry: false
+          /secrets/app/secrets.json=skid-secrets:latest
+        flags: |
+          --memory=1Gi
+          --service-account=cloud-run-sa@${{ inputs.project_id }}.iam.gserviceaccount.com
 
     - name: 🕰️ Create Main Cloud Scheduler
       shell: bash
       run: |
         if [ ! "$(gcloud scheduler jobs list --location=us-central1 | grep ${{ steps.globals.outputs.JOB_NAME }})" ]; then
-          gcloud scheduler jobs create pubsub "${{ steps.globals.outputs.JOB_NAME }}" \
+          gcloud scheduler jobs create http "${{ steps.globals.outputs.JOB_NAME }}" \
             --description="${{ steps.globals.outputs.JOB_DESCRIPTION }}" \
             --schedule="${{ steps.globals.outputs.CRON }}" \
             --time-zone=America/Denver \
             --location=us-central1 \
-            --topic="${{ steps.globals.outputs.TOPIC_NAME }}" \
-            --message-body='eid updates' \
+            --uri="https://us-central1-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${{ inputs.project_id }}/jobs/${{ steps.globals.outputs.JOB_NAME }}:run" \
+            --oauth-service-account-email=scheduler-sa@${{ inputs.project_id }}.iam.gserviceaccount.com \
             --quiet
         else
-          gcloud scheduler jobs update pubsub "${{ steps.globals.outputs.JOB_NAME }}" \
+          gcloud scheduler jobs update http "${{ steps.globals.outputs.JOB_NAME }}" \
             --description="${{ steps.globals.outputs.JOB_DESCRIPTION }}" \
             --schedule="${{ steps.globals.outputs.CRON }}" \
             --time-zone=America/Denver \
             --location=us-central1 \
-            --topic="${{ steps.globals.outputs.TOPIC_NAME }}" \
-            --message-body='eid updates' \
+            --uri="https://us-central1-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${{ inputs.project_id }}/jobs/${{ steps.globals.outputs.JOB_NAME }}:run" \
+            --oauth-service-account-email=scheduler-sa@${{ inputs.project_id }}.iam.gserviceaccount.com \
             --quiet
         fi
 
