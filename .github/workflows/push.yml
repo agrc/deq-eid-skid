@@ -33,7 +33,7 @@ jobs:
           extra-files: src/deq_eid/version.py
 
   deploy-dev:
-    name: Deploy to GCF - dev
+    name: Deploy Dev
     runs-on: ubuntu-latest
     if: github.ref_name == 'dev'
     environment:
@@ -54,3 +54,4 @@ jobs:
           identity_provider: ${{ secrets.IDENTITY_PROVIDER }}
           service_account_email: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
           pause_schedule_job: "yes"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
