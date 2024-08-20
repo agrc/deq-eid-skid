@@ -12,10 +12,8 @@ from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
 import arcgis
-import functions_framework
 from arcgis.features import GeoAccessor
 from arcgis.gis._impl._content_manager import SharingLevel
-from cloudevents.http import CloudEvent
 from palletjack import extract, load
 from supervisor.message_handlers import SendGridHandler
 from supervisor.models import MessageDetails, Supervisor

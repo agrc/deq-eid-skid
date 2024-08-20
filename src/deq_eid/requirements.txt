@@ -1,4 +1,0 @@
-agrc-supervisor==3.0.*
-functions-framework>=3.8.0,<3.9
-requests<2.32
-ugrc-palletjack==5.*
