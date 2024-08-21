@@ -1,5 +1,48 @@
 # Changelog
 
+## 1.0.0 (2024-08-21)
+
+
+### Features
+
+* implement publish and update for all tables ([128837d](https://github.com/agrc/deq-eid-skid/commit/128837d317556dbbf1f971c3a5e382a5547ae407))
+* only send emails in the cloud ([a441721](https://github.com/agrc/deq-eid-skid/commit/a4417216f85b419895d4979c5d6dfd6eeccae40d))
+* publish environmental incident layer ([83ae148](https://github.com/agrc/deq-eid-skid/commit/83ae1486bb3576345955880d149b3ba9646cd940))
+
+
+### Bug Fixes
+
+* convert to cloud run with higher timeout ([8cf7d82](https://github.com/agrc/deq-eid-skid/commit/8cf7d822368306ac921d80f9312e61922281530a))
+* decrease service timeout to comply with gcp requirement ([de21805](https://github.com/agrc/deq-eid-skid/commit/de21805ea2ec7b27223f59eaf3ca4ad08fb87f65))
+* increase memory limit ([18b9c8a](https://github.com/agrc/deq-eid-skid/commit/18b9c8a52a5213162c8bdd992e9c880a398edc35))
+* memory suffix ([f108139](https://github.com/agrc/deq-eid-skid/commit/f1081393385d52d0bf574b92907ea2d0432d6422))
+* move deps back to setup and remove functions ([e351a83](https://github.com/agrc/deq-eid-skid/commit/e351a834b783ae0446be84215266eaba38a4550d))
+* move item ids to secrets to allow for different values per environment ([f7f3792](https://github.com/agrc/deq-eid-skid/commit/f7f37929508aed53f1b5184d79b46abef84d7bdd))
+* pin requests to fix arcgis package issues ([983fd84](https://github.com/agrc/deq-eid-skid/commit/983fd84be7f4aff24f1c39e8959af4490046ec5a))
+* run notify only if one of the deploy jobs succeeds ([f190150](https://github.com/agrc/deq-eid-skid/commit/f190150abb44d5ee66334f483ee124c706a10686))
+* standardize workflows ([801b0fc](https://github.com/agrc/deq-eid-skid/commit/801b0fcf5c2e198a477464268bc630befbd61e2c))
+* use correct input for service account ([2d5d999](https://github.com/agrc/deq-eid-skid/commit/2d5d9993d535cb4e43d31adde5d3307c2eebcdeb))
+* use different table name and don't share in dev ([a7b7097](https://github.com/agrc/deq-eid-skid/commit/a7b70975a28c95d2e4e4aa41dcd9d6b94b5accc3))
+* use generic email address ([61622b0](https://github.com/agrc/deq-eid-skid/commit/61622b0c1341131db870939e4b0cf1600e386523))
+
+
+### Dependencies
+
+* bump ci deps ([982aa8f](https://github.com/agrc/deq-eid-skid/commit/982aa8f6c2a67d391c0b7794b54d0c57e72def40))
+* bump the major-dependencies group with 4 updates ([6d00457](https://github.com/agrc/deq-eid-skid/commit/6d00457bb46283dfc680b5074a00211022a57a8d))
+* **dev:** update functions-framework requirement ([4f05e34](https://github.com/agrc/deq-eid-skid/commit/4f05e3484335b472b6dc1b32ba271acb8c0ddf59))
+* update palletjack and pin supervisor ([fca212c](https://github.com/agrc/deq-eid-skid/commit/fca212c9423f09ac3e9fa72ae63c4b1c465995ee))
+
+
+### Documentation
+
+* add docstring to publish method ([4072de9](https://github.com/agrc/deq-eid-skid/commit/4072de94efd56843f570ded0793eaabecf8b5f30))
+* add field mappings and view info ([432c37a](https://github.com/agrc/deq-eid-skid/commit/432c37ad7649b62f8f095f7fd2925280fcb85a53))
+* add notes from Barry about field and api names ([24cc035](https://github.com/agrc/deq-eid-skid/commit/24cc035a7a76ec7aec46ee02d853557be173ba15))
+* better local test command ([4afbe16](https://github.com/agrc/deq-eid-skid/commit/4afbe16031bcb415e245a802d328918f257f55e7))
+* remove old function stuff and add note about publish method ([25eeb40](https://github.com/agrc/deq-eid-skid/commit/25eeb408fc96435b130aeaff2de7510c03ee0e87))
+* start to make readme specific to this project ([e0b12dd](https://github.com/agrc/deq-eid-skid/commit/e0b12dd5c633bafec39017d7ac74b55616acb1b2))
+
 ## [1.0.0-4](https://github.com/agrc/deq-eid-skid/compare/v1.0.0-3...v1.0.0-4) (2024-08-16)
 
 
