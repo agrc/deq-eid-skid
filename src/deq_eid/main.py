@@ -33,7 +33,6 @@ class Skid:
         self.secrets = SimpleNamespace(**self._get_secrets())
         self.tempdir = TemporaryDirectory(ignore_cleanup_errors=True)
         self.tempdir_path = Path(self.tempdir.name)
-        # self.log_name = f'{config.LOG_FILE_NAME}_{datetime.now().strftime("%Y%m%d-%H%M%S")}.txt'
         self.log_name = f"{config.LOG_FILE_NAME}.txt"
         self.log_path = self.tempdir_path / self.log_name
         self._initialize_supervisor()
