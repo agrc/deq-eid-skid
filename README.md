@@ -22,7 +22,7 @@ This skid pulls data from the DEQ EID Salesforce instance and loads it into DEQ 
 
 ### Testing Locally
 
-You may test this project by running `python src/deq_eid/main.py`
+You may test this project by running `deq-eid-skid`.
 
 ## Publishing AGOL Items
 
