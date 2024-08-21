@@ -1,7 +1,4 @@
 import logging
-from os import sep, walk
-from os.path import basename, join, normpath
-from zipfile import ZIP_DEFLATED, ZipFile
 
 import palletjack
 
@@ -106,21 +103,3 @@ class SalesForceRecords:
         fields_string = ",".join(fields)
 
         return fields_string
-
-
-def zip_fgdb(fgdb_path, zip_file_path):
-    with ZipFile(zip_file_path, "w", ZIP_DEFLATED) as zip_file:
-        fgdb_path = normpath(fgdb_path)
-        for dirpath, dirnames, filenames in walk(fgdb_path):
-            for file in filenames:
-                # Ignore .lock files
-                if not file.endswith(".lock"):
-                    try:
-                        zip_file.write(
-                            join(dirpath, file),
-                            join(basename(fgdb_path), join(dirpath, file)[len(fgdb_path) + len(sep) :]),
-                        )
-
-                    except Exception as e:
-                        logger.warn("error zipping file geodatabase: {}".format(e))
-        return None
