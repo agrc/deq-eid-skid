@@ -8,6 +8,7 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
+from shutil import make_archive
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
@@ -229,8 +230,12 @@ class Skid:
                 )
 
         self.skid_logger.info("zipping and publishing...")
-        zip_path = self.tempdir_path / f"{table_name}.zip"
-        helpers.zip_fgdb(feature_class_path.parent, zip_path)
+        zip_path = make_archive(
+            self.tempdir_path / table_name,
+            "zip",
+            root_dir=feature_class_path.parent,
+            base_dir=feature_class_path.name,
+        )
         fgdb_item = self.gis.content.add(
             {
                 "type": "File Geodatabase",
