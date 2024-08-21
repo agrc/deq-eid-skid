@@ -184,6 +184,7 @@ class Skid:
         return records.df
 
     def _publish_dataset(self, table_name, title, fields, sdf, type):
+        """A private method intended to be run, on a machine with access to arcpy, prior to this skid being scheduled in the cloud that creates the assets that the skid will write to."""
         import arcpy
 
         #: save to a feature class just so that we can add field aliases
