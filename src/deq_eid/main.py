@@ -20,7 +20,6 @@ from palletjack import extract, load
 from supervisor.message_handlers import SendGridHandler
 from supervisor.models import MessageDetails, Supervisor
 
-
 from . import config, helpers, version
 
 
@@ -304,9 +303,10 @@ class Skid:
         summary_message.message = "\n".join(summary_rows)
         summary_message.attachments = self.tempdir_path / self.log_name
 
-        # print(summary_message.message)
-
-        self.supervisor.notify(summary_message)
+        if config.IS_LOCAL_DEV:
+            print(summary_message.message)
+        else:
+            self.supervisor.notify(summary_message)
 
         self._remove_log_file_handlers()
 

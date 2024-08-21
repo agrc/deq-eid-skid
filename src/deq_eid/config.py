@@ -17,8 +17,10 @@ try:
     if not project_id:
         raise ValueError
     HOST_NAME = project_id
+    IS_LOCAL_DEV = False
 except Exception:
     HOST_NAME = socket.gethostname()
+    IS_LOCAL_DEV = True
 
 SENDGRID_SETTINGS = {  #: Settings for SendGridHandler
     "from_address": "noreply@utah.gov",
