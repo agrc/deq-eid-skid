@@ -2,10 +2,7 @@ import logging
 
 import palletjack
 
-try:
-    from . import config
-except ImportError:
-    import config
+from . import config
 
 logger = logging.getLogger(config.SKID_NAME)
 

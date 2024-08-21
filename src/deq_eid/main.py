@@ -20,14 +20,8 @@ from palletjack import extract, load
 from supervisor.message_handlers import SendGridHandler
 from supervisor.models import MessageDetails, Supervisor
 
-#: This makes it work when calling with just `python <file>`/installing via pip and in the gcf framework, where
-#: the relative imports fail because of how it's calling the function.
-try:
-    from . import config, helpers, version
-except ImportError:
-    import config
-    import helpers
-    import version
+
+from . import config, helpers, version
 
 
 class Skid:
