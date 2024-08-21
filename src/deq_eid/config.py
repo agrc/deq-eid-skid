@@ -22,7 +22,7 @@ except Exception:
 
 SENDGRID_SETTINGS = {  #: Settings for SendGridHandler
     "from_address": "noreply@utah.gov",
-    "to_addresses": ["stdavis@utah.gov"],
+    "to_addresses": ["ugrc-developers@utah.gov"],
     "prefix": f"{SKID_NAME} on {HOST_NAME}: ",
 }
 LOG_LEVEL = logging.DEBUG
