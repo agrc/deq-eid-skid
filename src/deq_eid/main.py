@@ -13,6 +13,7 @@ from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
 import arcgis
+import pandas as pd
 from arcgis.features import GeoAccessor
 from arcgis.gis._impl._content_manager import SharingLevel
 from palletjack import extract, load
@@ -152,7 +153,7 @@ class Skid:
         records.extract_data_from_salesforce()
 
         self.skid_logger.info("converting to spatial dataframe...")
-        sdf = GeoAccessor.from_xy(records.df, "Easting", "Northing", sr=26912)
+        sdf = pd.DataFrame.spatial.from_xy(records.df, "Easting", "Northing", sr=26912)
 
         self.skid_logger.info("projecting...")
         sdf.spatial.project(3857, "NAD_1983_To_WGS_1984_5")
