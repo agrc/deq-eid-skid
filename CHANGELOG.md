@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/agrc/deq-eid-skid/compare/v1.0.0...v1.0.1) (2024-10-09)
+
+
+### Bug Fixes
+
+* arcgis 2.4 syntax change ([8650cc8](https://github.com/agrc/deq-eid-skid/commit/8650cc8f6d73271994fb79797a99cbf120be82b9))
+* boost memory ([d38de27](https://github.com/agrc/deq-eid-skid/commit/d38de277ad10d50eafad2a6c77abe6938d49716f))
+
 ## 1.0.0 (2024-08-21)
 
 
