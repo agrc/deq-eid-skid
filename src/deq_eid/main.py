@@ -150,7 +150,7 @@ class Skid:
 
         self.skid_logger.info("projecting...")
         sdf.spatial.project(3857, "NAD_1983_To_WGS_1984_5")
-        sdf.spatial.sr = arcgis.geometry.SpatialReference(wkid=3857)
+        sdf.spatial.sr = arcgis.geometry.SpatialReference(3857)
 
         sdf["Date_Discovered"] = sdf["Date_Discovered_For_Filter"].dt.strftime("%m/%d/%Y")
 
