@@ -83,7 +83,7 @@ runs:
         secrets: |
           /secrets/app/secrets.json=skid-secrets:latest
         flags: |
-          --memory=512Mi
+          --memory=1G
           --service-account=cloud-run-sa@${{ inputs.project_id }}.iam.gserviceaccount.com
 
     - name: 🕰️ Create Main Cloud Scheduler
