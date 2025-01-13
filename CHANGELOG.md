@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/agrc/deq-eid-skid/compare/v1.0.2...v1.0.3) (2025-01-13)
+
+
+### Dependencies
+
+* clean up supervisor version resolution ([ce95b0f](https://github.com/agrc/deq-eid-skid/commit/ce95b0fc6760a9db01e6dfd7978dfd3fd553e0ca))
+
 ## [1.0.2](https://github.com/agrc/deq-eid-skid/compare/v1.0.1...v1.0.2) (2025-01-10)
 
 
