@@ -67,7 +67,8 @@ INCIDENTS_TITLE = "Environmental Incidents"
 INCIDENTS_TABLE_NAME = "EnvironmentalIncidents"
 INCIDENTS_FIELDS = (
     #: AGOL field name, Salesforce field name, AGOL Alias, type
-    FieldConfig("Id", "Id", "Spill ID", "text"),
+    FieldConfig("Id", "CaseNumber", "Spill ID", "text"),
+    FieldConfig('Salesforce_Id', "Id", "Salesforce ID", "text"),
     FieldConfig("SITEDESC", None, "Site Program Description", "static", static_value="Environmental Incidents"),
     FieldConfig("Northing", "Utm_N_Y_7_dgts__c", "Northing", "integer"),
     FieldConfig("Easting", "Utm_E_X_6_dgts__c", "Easting", "integer"),
