@@ -156,6 +156,11 @@ class Skid:
 
         sdf = sdf.query("Northing > 0 & Easting > 0")
 
+        #: add a field for the report link
+        sdf["ReportLink"] = sdf.apply(
+            lambda x: f"https://deqspillsps.deq.utah.gov/s/pdfdownload?recordId={x['Salesforce_Id']}" if x["Salesforce_Id"] else None, axis=1
+        )
+
         return sdf
 
     def _get_chemical(self) -> GeoAccessor:
