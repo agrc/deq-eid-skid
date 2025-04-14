@@ -163,30 +163,6 @@ class Skid:
 
         return sdf
 
-    def _get_chemical(self) -> GeoAccessor:
-        self.skid_logger.info("loading chemicals records from Salesforce...")
-        records = helpers.SalesForceRecords(
-            self.salesforce_extractor,
-            config.CHEMICAL_SF_API,
-            config.CHEMICAL_FIELDS,
-            None,
-        )
-        records.extract_data_from_salesforce()
-
-        return records.df
-
-    def _get_media(self) -> GeoAccessor:
-        self.skid_logger.info("loading impacted media records from Salesforce...")
-        records = helpers.SalesForceRecords(
-            self.salesforce_extractor,
-            config.MEDIA_SF_API,
-            config.MEDIA_FIELDS,
-            None,
-        )
-        records.extract_data_from_salesforce()
-
-        return records.df
-
     def _publish_dataset(self, table_name, title, fields, sdf, type):
         """A private method intended to be run, on a machine with access to arcpy, prior to this skid being scheduled in the cloud that creates the assets that the skid will write to."""
         import arcpy
@@ -270,24 +246,6 @@ class Skid:
         )
         incidents_count = incidents_loader.truncate_and_load(incidents_sdf)
 
-        chemical_df = self._get_chemical()
-        chemical_loader = load.ServiceUpdater(
-            self.gis,
-            self.secrets.CHEMICAL_ITEM_ID,
-            service_type="table",
-            working_dir=self.tempdir_path,
-        )
-        chemical_count = chemical_loader.truncate_and_load(chemical_df)
-
-        media_df = self._get_media()
-        media_loader = load.ServiceUpdater(
-            self.gis,
-            self.secrets.MEDIA_ITEM_ID,
-            service_type="table",
-            working_dir=self.tempdir_path,
-        )
-        media_count = media_loader.truncate_and_load(media_df)
-
         end = datetime.now()
 
         summary_message = MessageDetails()
@@ -301,8 +259,6 @@ class Skid:
             f"Duration: {str(end-start)}",
             "",
             f"{config.INCIDENTS_TITLE} rows loaded: {incidents_count}",
-            f"{config.CHEMICAL_TITLE} rows loaded: {chemical_count}",
-            f"{config.MEDIA_TITLE} rows loaded: {media_count}",
         ]
 
         summary_message.message = "\n".join(summary_rows)
@@ -327,24 +283,6 @@ class Skid:
             config.INCIDENTS_FIELDS,
             incidents_sdf,
             "layer",
-        )
-
-        chemical_df = self._get_chemical()
-        self._publish_dataset(
-            config.CHEMICAL_TABLE_NAME,
-            config.CHEMICAL_TITLE,
-            config.CHEMICAL_FIELDS,
-            chemical_df,
-            "table",
-        )
-
-        media_df = self._get_media()
-        self._publish_dataset(
-            config.MEDIA_TABLE_NAME,
-            config.MEDIA_TITLE,
-            config.MEDIA_FIELDS,
-            media_df,
-            "table",
         )
 
         self._remove_log_file_handlers()
