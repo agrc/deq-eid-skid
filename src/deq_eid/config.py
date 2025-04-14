@@ -83,29 +83,3 @@ INCIDENTS_FIELDS = (
     FieldConfig("Date_Discovered_For_Filter", "Date_Time_Discovered__c", "Date Discovered For Filter", "date"),
     FieldConfig("Incident_summary", "Event_Description_Initial_Actions_Taken__c", "Incident Summary", "text"),
 )
-
-CHEMICAL_SF_API = "Chemicals__c"
-CHEMICAL_TITLE = "Chemicals"
-CHEMICAL_TABLE_NAME = "DEQMAP_EIChemical"
-CHEMICAL_FIELDS = (
-    FieldConfig("SpillId", "Case__c", "Spill ID", "text"),
-    FieldConfig("Chemical_Number", "Legacy_Id__c", "Chemical Number", "text"),
-    FieldConfig("Chemical", "Material_Chem__c", "Chemical Name", "text"),
-    FieldConfig("Chemical_Name", "Chemical_Name_Text__c", "Chemical Name Text", "text"),
-    FieldConfig("Chemical_Other", "If_Other_Material_Chem_describe__c", "Other Chemical", "text"),
-    FieldConfig("Amount", "Amount__c", "Amount", "text"),
-    FieldConfig("Amount_Type", "Amount_Type__c", "Amount Type", "text"),
-    FieldConfig("Amount_Other", "If_Other_Amount_Type_describe__c", "Amount Other", "text"),
-)
-
-MEDIA_SF_API = "Impacted_Media__c"
-MEDIA_TITLE = "Impacted Media"
-MEDIA_TABLE_NAME = "DEQmap_ImpactedMedia"
-MEDIA_FIELDS = (
-    FieldConfig("SpillId", "Case__c", "Spill ID", "text"),
-    FieldConfig("WaterwayName", "Waterway_Name__c", "Waterway Name", "text"),
-    FieldConfig("ImpactedMediaOther", "If_Other_Impacted_Media_describe__c", "Impacted Media Other", "text"),
-    FieldConfig("ImpactedMedia", "Impacted_Media_List__c", "Impacted Media", "text"),
-    FieldConfig("In_NearWater", "In_Near_Surface_Water__c", "In or Near Water", "text"),
-    FieldConfig("LandUse", "Land_Use__c", "Land Use", "text"),
-)
