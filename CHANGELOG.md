@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.4](https://github.com/agrc/deq-eid-skid/compare/v1.0.3...v1.0.4) (2025-04-14)
+
+
+### Features
+
+* add ReportLink field ([4e841c9](https://github.com/agrc/deq-eid-skid/commit/4e841c907c6ccab1f2daa35e5792a5812fa10571))
+
+
+### Bug Fixes
+
+* re-point Id to CaseNumber and add a new Salesforce_Id field ([b8da881](https://github.com/agrc/deq-eid-skid/commit/b8da8814f8d7ac76b0e0e22ad4adcd1e38740058)), closes [#19](https://github.com/agrc/deq-eid-skid/issues/19)
+* remove chemical and impacted media related tables ([c2cf807](https://github.com/agrc/deq-eid-skid/commit/c2cf8075b3f50dd226effece6aa8f963b46c4e45)), closes [#18](https://github.com/agrc/deq-eid-skid/issues/18)
+
 ## [1.0.3](https://github.com/agrc/deq-eid-skid/compare/v1.0.2...v1.0.3) (2025-01-13)
 
 
