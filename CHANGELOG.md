@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/agrc/deq-eid-skid/compare/v1.0.4...v1.0.5) (2025-06-10)
+
+
+### Bug Fixes
+
+* increase job timeout ([5d1d5d6](https://github.com/agrc/deq-eid-skid/commit/5d1d5d615443f834ee1e718eda5c24538ff66092))
+
 ## [1.0.4](https://github.com/agrc/deq-eid-skid/compare/v1.0.3...v1.0.4) (2025-04-14)
 
 
