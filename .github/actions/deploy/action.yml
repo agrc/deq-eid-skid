@@ -79,7 +79,7 @@ runs:
       with:
         job: ${{ steps.globals.outputs.JOB_NAME }}
         image: us-central1-docker.pkg.dev/${{ inputs.project_id }}/images/job:latest
-        timeout: 25m
+        timeout: 60m
         secrets: |
           /secrets/app/secrets.json=skid-secrets:latest
         flags: |
