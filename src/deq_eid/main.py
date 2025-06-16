@@ -149,8 +149,9 @@ class Skid:
         sdf = pd.DataFrame.spatial.from_xy(records.df, "Easting", "Northing", sr=26912)
 
         self.skid_logger.info("projecting...")
-        sdf.spatial.project(3857, "NAD_1983_To_WGS_1984_5")
-        sdf.spatial.sr = arcgis.geometry.SpatialReference(3857)
+        web_mercator = arcgis.geometry.SpatialReference(3857)
+        sdf.spatial.project(web_mercator, "NAD_1983_To_WGS_1984_5")
+        sdf.spatial.sr = web_mercator
 
         sdf["Date_Discovered"] = sdf["Date_Discovered_For_Filter"].dt.strftime("%m/%d/%Y")
 
