@@ -51,7 +51,7 @@ setup(
             "pytest-ruff==0.*",
             "pytest-watch==4.*",
             "pytest>=6,<9",
-            "ruff==0.0.*",
+            "ruff==0.*",
         ]
     },
     setup_requires=[
