@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.6](https://github.com/agrc/deq-eid-skid/compare/v1.0.5...v1.0.6) (2025-06-17)
+
+
+### Bug Fixes
+
+* use correct spatial reference format ([353f6ce](https://github.com/agrc/deq-eid-skid/commit/353f6ce54ae938eae46119da0673873cbe88fae9))
+
 ## [1.0.5](https://github.com/agrc/deq-eid-skid/compare/v1.0.4...v1.0.5) (2025-06-10)
 
 
