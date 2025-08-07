@@ -8,7 +8,7 @@ concurrency:
 
 jobs:
   test:
-    name: Test
+    name: Unit tests
     runs-on: ubuntu-latest
 
     steps:
