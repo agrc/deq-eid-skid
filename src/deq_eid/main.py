@@ -3,6 +3,7 @@
 """
 Run the deq_eid script as a cloud function.
 """
+
 import json
 import logging
 import sys
@@ -20,7 +21,7 @@ from palletjack import extract, load
 from supervisor.message_handlers import SendGridHandler
 from supervisor.models import MessageDetails, Supervisor
 
-from . import config, helpers, version
+from deq_eid import config, helpers, version
 
 
 class Skid:
@@ -159,7 +160,10 @@ class Skid:
 
         #: add a field for the report link
         sdf["ReportLink"] = sdf.apply(
-            lambda x: f"https://deqspillsps.deq.utah.gov/s/pdfdownload?recordId={x['Salesforce_Id']}" if x["Salesforce_Id"] else None, axis=1
+            lambda x: f"https://deqspillsps.deq.utah.gov/s/pdfdownload?recordId={x['Salesforce_Id']}"
+            if x["Salesforce_Id"]
+            else None,
+            axis=1,
         )
 
         return sdf
@@ -252,12 +256,12 @@ class Skid:
         summary_message = MessageDetails()
         summary_message.subject = f"{config.SKID_NAME} Update Summary"
         summary_rows = [
-            f'{config.SKID_NAME} update {start.strftime("%Y-%m-%d")}',
+            f"{config.SKID_NAME} update {start.strftime('%Y-%m-%d')}",
             "=" * 20,
             "",
-            f'Start time: {start.strftime("%H:%M:%S")}',
-            f'End time: {end.strftime("%H:%M:%S")}',
-            f"Duration: {str(end-start)}",
+            f"Start time: {start.strftime('%H:%M:%S')}",
+            f"End time: {end.strftime('%H:%M:%S')}",
+            f"Duration: {str(end - start)}",
             "",
             f"{config.INCIDENTS_TITLE} rows loaded: {incidents_count}",
         ]

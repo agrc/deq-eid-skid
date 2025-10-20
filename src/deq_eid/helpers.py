@@ -2,7 +2,7 @@ import logging
 
 import palletjack
 
-from . import config
+from deq_eid import config
 
 logger = logging.getLogger(config.SKID_NAME)
 
