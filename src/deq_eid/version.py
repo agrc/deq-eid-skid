@@ -1,4 +1,4 @@
 """A single source of truth for the version in a programatically-accessible variable.
 """
 
-__version__ = "1.0.6"
+__version__ = "1.0.7"
