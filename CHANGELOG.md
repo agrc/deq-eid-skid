@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.8](https://github.com/agrc/deq-eid-skid/compare/v1.0.7...v1.0.8) (2025-11-10)
+
+
+### Dependencies
+
+* **dev:** update pytest-cov requirement from &lt;7,&gt;=3 to &gt;=3,&lt;8 ([5d65267](https://github.com/agrc/deq-eid-skid/commit/5d65267b7f225fa7f5c2abac76e61629f4f90fec))
+
 ## [1.0.7](https://github.com/agrc/deq-eid-skid/compare/v1.0.6...v1.0.7) (2025-10-21)
 
 
