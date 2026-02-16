@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.9](https://github.com/agrc/deq-eid-skid/compare/v1.0.8...v1.0.9) (2026-02-16)
+
+
+### Dependencies
+
+* **dev:** update pytest requirement from &lt;9,&gt;=6 to &gt;=6,&lt;10 ([55f4ffa](https://github.com/agrc/deq-eid-skid/commit/55f4ffa2c16abe1a348d6c04df92fe18349824c9))
+* update ugrc-palletjack requirement from ==5.* to &gt;=5,&lt;7 ([30f07c0](https://github.com/agrc/deq-eid-skid/commit/30f07c0cb21d89837a41e7b0748c6b533260a9a6))
+
 ## [1.0.8](https://github.com/agrc/deq-eid-skid/compare/v1.0.7...v1.0.8) (2025-11-10)
 
 
